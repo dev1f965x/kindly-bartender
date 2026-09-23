@@ -1,0 +1,64 @@
+.status {
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+}
+
+.status[data-tone="watching"] {
+  --tone: var(--state-watching);
+}
+
+.status[data-tone="waiting"] {
+  --tone: var(--state-waiting);
+}
+
+.status[data-tone="lost"] {
+  --tone: var(--state-lost);
+}
+
+.status__state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-strong);
+  font-size: var(--text-large);
+  font-weight: 600;
+}
+
+/* The dot breathes while the app is watching, and holds still otherwise. */
+.status__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+
+.status[data-tone="watching"] .status__dot {
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--tone) 0%, transparent);
+  }
+}
+
+.status__detail {
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-small);
+}
+
+.status__last {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-faint);
+  font-size: var(--text-small);
+}

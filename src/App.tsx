@@ -1,51 +1,89 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import "./design/base.css";
 import "./App.css";
+import { BrandMark } from "./components/BrandMark";
+import { Notice } from "./components/Notice";
+import { SettingsPanel } from "./components/SettingsPanel";
+import { StatusCard } from "./components/StatusCard";
+import { UpdateButton } from "./components/UpdateButton";
+import {
+  APP_NAME,
+  INSTALL_NOTICE,
+  RESTART_NOTICE,
+  SETTINGS_LABELS,
+  WINDOW_LABELS,
+} from "./domain/labels";
+import { useSettings } from "./settings/useSettings";
+import { useNow } from "./shell/clock";
+import type { Autostart, Bartender, SettingsMemory } from "./shell/ports";
+import { useWatching } from "./shell/useWatching";
+import type { UpdateState } from "./update/useUpdate";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
-  return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
-  );
+export interface AppProps {
+  bartender: Bartender;
+  memory: SettingsMemory;
+  autostart: Autostart;
+  update?: UpdateState;
+  onInstallUpdate?: () => void;
+  /** Fixed by tests; the window reads a ticking clock. */
+  now?: Date;
 }
 
-export default App;
+/**
+ * The whole window: the app's name, what it is doing, whatever it needs from the player,
+ * and the settings. It is open only while something is being changed or checked — the work
+ * happens with it closed (ADR 6).
+ */
+export default function App({
+  bartender,
+  memory,
+  autostart,
+  update = { status: "current" },
+  onInstallUpdate = () => {},
+  now,
+}: AppProps) {
+  const clock = useNow();
+  const { status, lastCall, restartNeeded } = useWatching(bartender);
+  const { settings, change } = useSettings(memory, bartender, autostart);
+
+  const findInstall = () => {
+    void bartender.askForInstallFolder().then((folder) => {
+      if (folder) change({ installPath: folder });
+    });
+  };
+
+  return (
+    <div className="app">
+      <header className="app__bar">
+        <BrandMark />
+        <div className="app__name">
+          <h1 className="app__title">{APP_NAME}</h1>
+          <span className="app__version">v{__APP_VERSION__}</span>
+        </div>
+        <UpdateButton update={update} onInstall={onInstallUpdate} />
+      </header>
+
+      <main className="app__main">
+        <StatusCard status={status} lastCall={lastCall} now={now ?? clock} />
+
+        {restartNeeded && <Notice title={RESTART_NOTICE.title} detail={RESTART_NOTICE.detail} />}
+
+        {status === "install-not-found" && !settings.installPath && (
+          <Notice
+            title={INSTALL_NOTICE.title}
+            detail={INSTALL_NOTICE.detail}
+            action={{ label: SETTINGS_LABELS.installFind, onAction: findInstall }}
+          />
+        )}
+
+        <SettingsPanel
+          settings={settings}
+          onChange={change}
+          onFindInstall={findInstall}
+          onTest={() => void bartender.tryTheCall()}
+        />
+      </main>
+
+      <footer className="app__footer">{WINDOW_LABELS.closeHint}</footer>
+    </div>
+  );
+}

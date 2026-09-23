@@ -1,0 +1,25 @@
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.brand-mark__plate {
+  fill: var(--surface-raised);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.brand-mark__glass,
+.brand-mark__stem,
+.brand-mark__base {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.brand-mark__olive {
+  fill: var(--state-watching);
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "kindly-bartender",
+  "productName": "Kindly Bartender",
   "version": "0.1.0",
   "identifier": "io.github.dev1f965x.kindlybartender",
   "build": {
@@ -12,24 +12,57 @@
   "app": {
     "windows": [
       {
-        "title": "kindly-bartender",
-        "width": 800,
-        "height": 600
+        "title": "Kindly Bartender",
+        "width": 460,
+        "height": 680,
+        "minWidth": 400,
+        "minHeight": 560,
+        "resizable": true,
+        "center": true
       }
     ],
     "security": {
       "csp": null
+    },
+    "trayIcon": {
+      "id": "tray",
+      "iconPath": "icons/32x32.png",
+      "iconAsTemplate": false
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "dev1f965x",
+    "shortDescription": "Calls you back when the shop reopens",
+    "windows": {
+      "nsis": {
+        "installMode": "perMachine",
+        "languages": [
+          "Korean",
+          "English"
+        ]
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/dev1f965x/kindly-bartender/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }
