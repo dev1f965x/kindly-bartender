@@ -27,7 +27,7 @@ const mark = `
         <path d="M20 22v6" />
         <path d="M15.5 28h9" />
       </g>
-      <circle cx="24" cy="15.5" r="2" fill="#7cc47f" />
+      <circle cx="23" cy="15.2" r="1.8" fill="#9bbf6a" />
     </svg>
   </body>
 </html>`;

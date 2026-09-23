@@ -10,6 +10,7 @@ import {
   INSTALL_NOTICE,
   RESTART_NOTICE,
   SETTINGS_LABELS,
+  WAITING_WHILE_RUNNING,
   WINDOW_LABELS,
 } from "./domain/labels";
 import { useSettings } from "./settings/useSettings";
@@ -42,11 +43,11 @@ export default function App({
   now,
 }: AppProps) {
   const clock = useNow();
-  const { status, lastCall, restartNeeded } = useWatching(bartender);
+  const { status, lastCall, restartNeeded, gameRunning } = useWatching(bartender);
   const { settings, change } = useSettings(memory, bartender, autostart);
 
-  // While the notice above offers to find the game, the panel does not offer it twice.
-  const lost = status === "install-not-found" && !settings.installPath;
+  // Finding the game comes before anything else the window could ask for.
+  const lost = status === "install-not-found";
 
   const findInstall = () => {
     void bartender.askForInstallFolder().then((folder) => {
@@ -66,29 +67,34 @@ export default function App({
       </header>
 
       <main className="app__main">
-        <StatusCard status={status} lastCall={lastCall} now={now ?? clock} />
+        <StatusCard
+          status={status}
+          detail={status === "waiting-for-game" && gameRunning ? WAITING_WHILE_RUNNING : undefined}
+          lastCall={lastCall}
+          now={now ?? clock}
+        />
 
-        {restartNeeded && (
-          <Notice
-            title={RESTART_NOTICE[status === "waiting-for-game" ? "closed" : "running"].title}
-            detail={RESTART_NOTICE[status === "waiting-for-game" ? "closed" : "running"].detail}
-          />
-        )}
-
-        {lost && (
+        {lost ? (
           <Notice
             title={INSTALL_NOTICE.title}
             detail={INSTALL_NOTICE.detail}
             tone="lost"
             action={{ label: SETTINGS_LABELS.installFind, onAction: findInstall }}
           />
+        ) : (
+          restartNeeded && (
+            <Notice
+              title={RESTART_NOTICE[gameRunning ? "running" : "closed"].title}
+              detail={RESTART_NOTICE[gameRunning ? "running" : "closed"].detail}
+            />
+          )
         )}
 
         <SettingsPanel
           settings={settings}
           status={status}
           onChange={change}
-          onFindInstall={lost ? undefined : findInstall}
+          onFindInstall={findInstall}
           onTest={() => void bartender.tryTheCall()}
         />
       </main>

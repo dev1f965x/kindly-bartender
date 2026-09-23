@@ -87,7 +87,7 @@ h3 {
 ::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
   border-radius: var(--radius-pill);
-  background: var(--border-strong);
+  background: var(--text-faint);
   background-clip: content-box;
 }
 

@@ -34,6 +34,10 @@ export const tauriBartender: Bartender = {
     return invoke<boolean>("logging_just_started");
   },
 
+  gameIsRunning() {
+    return invoke<boolean>("game_is_running");
+  },
+
   async askForInstallFolder() {
     const chosen = await open({ directory: true, title: "하스스톤 폴더 고르기" });
     return chosen ?? undefined;

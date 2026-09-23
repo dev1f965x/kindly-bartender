@@ -9,8 +9,7 @@ interface Props {
   settings: Settings;
   status: Status;
   onChange: (changes: Partial<Settings>) => void;
-  /** Left out while the notice above the panel is already offering to find it. */
-  onFindInstall?: () => void;
+  onFindInstall: () => void;
   onTest: () => void;
 }
 
@@ -36,9 +35,17 @@ export function SettingsPanel({ settings, status, onChange, onFindInstall, onTes
       </h2>
 
       <fieldset className="settings__group">
+        <legend className="settings__legend">{SETTINGS_LABELS.calls}</legend>
         <div className="settings__heading">
-          <legend className="settings__legend">{SETTINGS_LABELS.calls}</legend>
-          <button type="button" className="settings__test" onClick={test} aria-live="polite">
+          <p className="settings__hint">{SETTINGS_LABELS.testScope}</p>
+          <button
+            type="button"
+            className="settings__test"
+            title={SETTINGS_LABELS.testScope}
+            disabled={!settings.sound && !settings.notification}
+            onClick={test}
+            aria-live="polite"
+          >
             {tested ? SETTINGS_LABELS.tested : SETTINGS_LABELS.test}
           </button>
         </div>
@@ -83,25 +90,23 @@ export function SettingsPanel({ settings, status, onChange, onFindInstall, onTes
             id={installId}
             className="settings__path"
             data-chosen={Boolean(settings.installPath)}
+            data-lost={status === "install-not-found"}
           >
             {settings.installPath || INSTALL_FOUND[status]}
           </output>
-          {settings.installPath ? (
-            <button
-              type="button"
-              className="settings__button"
-              onClick={() => onChange({ installPath: "" })}
-            >
-              {SETTINGS_LABELS.installClear}
-            </button>
-          ) : (
-            onFindInstall && (
-              <button type="button" className="settings__button" onClick={onFindInstall}>
-                {SETTINGS_LABELS.installFind}
-              </button>
-            )
-          )}
+          <button type="button" className="settings__button" onClick={onFindInstall}>
+            {settings.installPath ? SETTINGS_LABELS.installAgain : SETTINGS_LABELS.installFind}
+          </button>
         </div>
+        {settings.installPath && (
+          <button
+            type="button"
+            className="settings__undo"
+            onClick={() => onChange({ installPath: "" })}
+          >
+            {SETTINGS_LABELS.installClear}
+          </button>
+        )}
       </div>
 
       <div className="settings__group">

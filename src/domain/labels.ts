@@ -17,10 +17,8 @@ export const STATUS_LABELS: Record<Status, { title: string; detail: string }> = 
   },
 };
 
-export const MOMENT_LABELS: Record<Moment, string> = {
-  "combat-ended": "전투 종료",
-  "gold-arrived": "골드 도착",
-};
+/** The game is up, but nothing is arriving: it started before the logging was turned on. */
+export const WAITING_WHILE_RUNNING = "하스스톤을 껐다 켜면 기록이 시작돼요";
 
 /** The game reads the logging setting once, at start, so what to ask depends on whether
  * it is running. */
@@ -47,16 +45,18 @@ export const SETTINGS_LABELS = {
   notification: "알림",
   focus: "하스스톤 창 앞으로",
   focusHint: "보던 화면에서 게임으로 바로 넘어가요",
-  test: "테스트",
+  test: "불러 보기",
   tested: "불러 봤어요",
-  player: "배틀태그 이름",
+  testScope: "소리와 알림만 들려 드려요",
+  player: "배틀태그 이름 (듀오에서만 써요)",
   playerHint: "듀오에서 파트너가 준 골드까지 알려 드려요. 배틀태그의 # 앞 이름만 적어 주세요",
   playerPlaceholder: "예: 바텐더",
   install: "하스스톤 위치",
   installFind: "찾아보기",
+  installAgain: "다시 고르기",
   installClear: "자동으로 되돌리기",
   autostart: "윈도우 시작할 때 함께 켜기",
-  autostartHint: "트레이에만 조용히 떠요",
+  autostartHint: "창 없이 트레이에서 시작해요",
 };
 
 /** Where the app is looking, when the player has not chosen a folder. */

@@ -67,11 +67,25 @@ const SHOTS: Shot[] = [
     stores: settled,
     act: async (page) => {
       await watching(page);
-      await page.getByRole("button", { name: "테스트" }).click();
+      await page.getByRole("button", { name: "불러 보기" }).click();
     },
+  },
+  {
+    name: "install-wrong",
+    stores: { "settings.json": { settings: { installPath: "D:\\Games\\Hearthstone" } } },
+    act: report("status", "install-not-found"),
+  },
+  {
+    name: "restart-while-running",
+    shell: { loggingJustStarted: true, gameRunning: true },
   },
   { name: "small-watching", stores: settled, act: watching, viewport: SMALLEST },
   { name: "small-waiting", viewport: SMALLEST },
+  {
+    name: "small-install-not-found",
+    act: report("status", "install-not-found"),
+    viewport: SMALLEST,
+  },
 ];
 
 async function main() {
@@ -82,7 +96,11 @@ async function main() {
     logLevel: "error",
   });
   await server.listen();
-  const browser = await chromium.launch({ channel: "msedge" });
+  // Headless Chromium hides scrollbars; the real window has one, and it takes room.
+  const browser = await chromium.launch({
+    channel: "msedge",
+    ignoreDefaultArgs: ["--hide-scrollbars"],
+  });
 
   try {
     for (const shot of SHOTS) {

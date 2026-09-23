@@ -7,11 +7,15 @@ export interface Called {
   at: Date;
 }
 
+/** How often the window re-asks whether the game is up, while it is not being read. */
+const ASK_AGAIN_MS = 5_000;
+
 /** The watcher's state, and the last time it called the player back. */
 export function useWatching(bartender: Bartender) {
   const [status, setStatus] = useState<Status>("waiting-for-game");
   const [lastCall, setLastCall] = useState<Called>();
   const [restartNeeded, setRestartNeeded] = useState(false);
+  const [gameRunning, setGameRunning] = useState(false);
 
   useEffect(() => {
     let stop: (() => void) | undefined;
@@ -38,5 +42,25 @@ export function useWatching(bartender: Bartender) {
     if (status === "watching") setRestartNeeded(false);
   }, [status]);
 
-  return { status, lastCall, restartNeeded };
+  // A game that is up while nothing is being read is a game that has to restart, so the
+  // answer is worth re-asking until it is.
+  useEffect(() => {
+    if (status === "watching") return;
+
+    let cancelled = false;
+    const ask = () => {
+      void bartender.gameIsRunning().then((running) => {
+        if (!cancelled) setGameRunning(running);
+      });
+    };
+
+    ask();
+    const timer = setInterval(ask, ASK_AGAIN_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [bartender, status]);
+
+  return { status, lastCall, restartNeeded, gameRunning };
 }

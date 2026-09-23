@@ -38,7 +38,7 @@ test("settings from last time are there on launch", async ({ page }) => {
     "settings.json": { settings: { playerName: "바텐더", sound: false } },
   });
 
-  await expect(page.getByLabel("배틀태그 이름")).toHaveValue("바텐더");
+  await expect(page.getByLabel(/배틀태그 이름/)).toHaveValue("바텐더");
   await expect(page.getByRole("switch", { name: /소리/ })).not.toBeChecked();
 });
 
@@ -55,7 +55,7 @@ test("the folder picker fills the install path in", async ({ page }) => {
 test("the test button calls the player back", async ({ page }) => {
   await openWindow(page);
 
-  await page.getByRole("button", { name: "테스트" }).click();
+  await page.getByRole("button", { name: "불러 보기" }).click();
 
   await expect(page.getByRole("button", { name: "불러 봤어요" })).toBeVisible();
   expect(await invoked(page, "try_the_call")).toHaveLength(1);

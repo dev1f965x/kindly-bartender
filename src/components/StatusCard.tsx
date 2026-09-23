@@ -5,13 +5,15 @@ import "./StatusCard.css";
 
 interface Props {
   status: Status;
+  /** Replaces the status's own line where the window knows something more precise. */
+  detail?: string;
   lastCall?: Called;
   now: Date;
 }
 
 /** What the app is doing, in the one line the player opens the window to read. */
-export function StatusCard({ status, lastCall, now }: Props) {
-  const { title, detail } = STATUS_LABELS[status];
+export function StatusCard({ status, detail, lastCall, now }: Props) {
+  const { title, detail: fallback } = STATUS_LABELS[status];
 
   return (
     <section className="status" data-tone={STATUS_TONE[status]} aria-live="polite">
@@ -19,7 +21,7 @@ export function StatusCard({ status, lastCall, now }: Props) {
         <span className="status__dot" aria-hidden="true" />
         {title}
       </p>
-      <p className="status__detail">{detail}</p>
+      <p className="status__detail">{detail ?? fallback}</p>
       <p className="status__last">
         {lastCall
           ? WINDOW_LABELS.lastCall(lastCall.moment, formatSince(lastCall.at, now))
