@@ -192,11 +192,10 @@ pub fn run() {
 
             build_tray(app.handle())?;
 
-            // Windows starts the app with --hidden; a player starting it wants the window.
-            if std::env::args().any(|argument| argument == "--hidden") {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.hide();
-                }
+            // The window is configured hidden, so Windows starting the app shows nothing.
+            // A player starting it wants to see it.
+            if !std::env::args().any(|argument| argument == "--hidden") {
+                show_window(app.handle());
             }
 
             Ok(())

@@ -4,7 +4,7 @@ import type { Settings } from "../settings/settings";
 import type { Autostart, Bartender, SettingsMemory } from "../shell/ports";
 
 /** A bartender the test drives: it reports what the test tells it to, and records calls. */
-export function fakeBartender(loggingJustStarted = false) {
+export function fakeBartender(loggingJustStarted = false, gameRunning = false) {
   let report: ((status: Status) => void) | undefined;
   let called: ((moment: Moment) => void) | undefined;
 
@@ -20,6 +20,7 @@ export function fakeBartender(loggingJustStarted = false) {
     apply: vi.fn(async () => {}),
     tryTheCall: vi.fn(async () => {}),
     loggingJustStarted: async () => loggingJustStarted,
+    gameIsRunning: async () => gameRunning,
     askForInstallFolder: vi.fn(async () => undefined as string | undefined),
   };
 

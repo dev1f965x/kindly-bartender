@@ -36,8 +36,11 @@
   flex-direction: column;
   gap: var(--space-4);
   min-height: 0;
-  padding: var(--space-2) var(--space-5) var(--space-4);
+  padding: var(--space-2) var(--space-5) var(--space-5);
   overflow-y: auto;
+  /* What scrolls out of sight fades, rather than being cut through a line of text. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  scrollbar-gutter: stable;
 }
 
 /* The one thing the player has to know about a window that closes to the tray. */

@@ -8,13 +8,14 @@ const now = new Date("2026-09-23T21:00:00+09:00");
 
 interface Options {
   loggingJustStarted?: boolean;
+  gameRunning?: boolean;
   /** Set where a test cares how long ago something happened. */
   ticking?: boolean;
 }
 
-function open({ loggingJustStarted = false, ticking = false }: Options = {}) {
+function open({ loggingJustStarted = false, gameRunning = false, ticking = false }: Options = {}) {
   const fixed = ticking ? undefined : now;
-  const { bartender, says, calls } = fakeBartender(loggingJustStarted);
+  const { bartender, says, calls } = fakeBartender(loggingJustStarted, gameRunning);
   const memory = fakeMemory();
   const autostart = fakeAutostart();
   render(<App bartender={bartender} memory={memory} autostart={autostart} now={fixed} />);
@@ -58,15 +59,29 @@ describe("App", () => {
     expect(bartender.askForInstallFolder).toHaveBeenCalled();
   });
 
-  it("says what to do about the logging it just turned on", async () => {
+  it("tells a closed game to start and a running one to restart", async () => {
     const { says } = open({ loggingJustStarted: true });
 
     expect(await screen.findByText("기록 설정을 켰어요")).toBeInTheDocument();
 
-    act(() => says("install-not-found"));
-    expect(screen.getByText("하스스톤을 한 번 껐다 켜 주세요")).toBeInTheDocument();
-
     act(() => says("watching"));
+    expect(screen.queryByText("기록 설정을 켰어요")).not.toBeInTheDocument();
+  });
+
+  it("asks a running game for a restart, since it read the setting at launch", async () => {
+    open({ loggingJustStarted: true, gameRunning: true });
+
+    expect(await screen.findByText("하스스톤을 한 번 껐다 켜 주세요")).toBeInTheDocument();
+    expect(screen.getByText("하스스톤을 껐다 켜면 기록이 시작돼요")).toBeInTheDocument();
+  });
+
+  it("puts finding the game before anything else it might ask", async () => {
+    const { says } = open({ loggingJustStarted: true, gameRunning: true });
+    await screen.findByText("하스스톤을 한 번 껐다 켜 주세요");
+
+    act(() => says("install-not-found"));
+
+    expect(screen.getByText("설치 폴더를 알려 주세요")).toBeInTheDocument();
     expect(screen.queryByText("하스스톤을 한 번 껐다 켜 주세요")).not.toBeInTheDocument();
   });
 
@@ -83,7 +98,7 @@ describe("App", () => {
   it("tries the call out on request", async () => {
     const { bartender } = open();
 
-    await userEvent.click(screen.getByRole("button", { name: "테스트" }));
+    await userEvent.click(screen.getByRole("button", { name: "불러 보기" }));
 
     expect(bartender.tryTheCall).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "불러 봤어요" })).toBeInTheDocument();
@@ -93,7 +108,7 @@ describe("App", () => {
     const { memory } = open();
     await screen.findByText("하스스톤을 기다리는 중");
 
-    await userEvent.type(screen.getByLabelText("배틀태그 이름"), "바텐더");
+    await userEvent.type(screen.getByLabelText(/배틀태그 이름/), "바텐더");
 
     expect(memory.saved.at(-1)?.playerName).toBe("바텐더");
   });

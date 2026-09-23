@@ -7,6 +7,8 @@ export interface Shell {
   loggingJustStarted?: boolean;
   /** Whether Windows already starts the app. */
   autostart?: boolean;
+  /** Whether Hearthstone is running. */
+  gameRunning?: boolean;
   /** What the folder picker gives back. */
   installFolder?: string;
 }
@@ -54,6 +56,7 @@ export function tauriStandIn(stores: Stores = {}, shell: Shell = {}): string {
       if (command === "plugin:autostart|enable") { shell.autostart = true; return null; }
       if (command === "plugin:autostart|disable") { shell.autostart = false; return null; }
       if (command === "logging_just_started") return Boolean(shell.loggingJustStarted);
+      if (command === "game_is_running") return Boolean(shell.gameRunning);
       return null;
     };
 

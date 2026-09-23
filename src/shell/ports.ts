@@ -14,6 +14,8 @@ export interface Bartender {
   tryTheCall(): Promise<void>;
   /** Whether this run turned the game's logging on, which needs the game restarted. */
   loggingJustStarted(): Promise<boolean>;
+  /** Whether Hearthstone is running right now. */
+  gameIsRunning(): Promise<boolean>;
   /** Asks for the install folder, and gives back what was chosen. */
   askForInstallFolder(): Promise<string | undefined>;
 }

@@ -11,7 +11,7 @@ export function BrandMark() {
       <path className="brand-mark__glass" d="M11 13h18l-9 9z" />
       <path className="brand-mark__stem" d="M20 22v6" />
       <path className="brand-mark__base" d="M15.5 28h9" />
-      <circle className="brand-mark__olive" cx="24" cy="15.5" r="2" />
+      <circle className="brand-mark__olive" cx="23" cy="15.2" r="1.8" />
     </svg>
   );
 }
