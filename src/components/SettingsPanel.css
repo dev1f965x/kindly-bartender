@@ -6,9 +6,10 @@
 
 .settings__heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  margin-bottom: var(--space-1);
 }
 
 .settings__group {
@@ -26,7 +27,7 @@
 
 .settings__test {
   /* Wide enough for the longer of its two words, so the row does not jump. */
-  min-width: 86px;
+  min-width: 96px;
   height: 28px;
   padding: 0 var(--space-4);
   border: 1px solid var(--border-strong);
@@ -37,8 +38,13 @@
   font-size: var(--text-small);
 }
 
-.settings__test:hover {
+.settings__test:hover:not(:disabled) {
   border-color: var(--accent);
+}
+
+.settings__test:disabled {
+  color: var(--text-faint);
+  cursor: default;
 }
 
 .settings__field {
@@ -92,6 +98,11 @@
   text-align: left;
 }
 
+/* A path that was chosen and still does not hold the game reads as the problem it is. */
+.settings__path[data-lost="true"] {
+  color: var(--state-lost);
+}
+
 .settings__button {
   flex-shrink: 0;
   height: 36px;
@@ -112,4 +123,19 @@
   margin-top: var(--space-1);
   color: var(--text-faint);
   font-size: var(--text-small);
+}
+
+/* Handing the search back is a smaller thing than choosing a folder. */
+.settings__undo {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+  padding: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--text-small);
+  text-decoration: underline;
+}
+
+.settings__undo:hover {
+  color: var(--text-strong);
 }
