@@ -78,3 +78,20 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The window scrolls only when a notice makes it too tall; the bar stays out of the way. */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
+  background-clip: content-box;
+}

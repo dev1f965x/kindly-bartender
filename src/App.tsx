@@ -45,6 +45,9 @@ export default function App({
   const { status, lastCall, restartNeeded } = useWatching(bartender);
   const { settings, change } = useSettings(memory, bartender, autostart);
 
+  // While the notice above offers to find the game, the panel does not offer it twice.
+  const lost = status === "install-not-found" && !settings.installPath;
+
   const findInstall = () => {
     void bartender.askForInstallFolder().then((folder) => {
       if (folder) change({ installPath: folder });
@@ -65,20 +68,27 @@ export default function App({
       <main className="app__main">
         <StatusCard status={status} lastCall={lastCall} now={now ?? clock} />
 
-        {restartNeeded && <Notice title={RESTART_NOTICE.title} detail={RESTART_NOTICE.detail} />}
+        {restartNeeded && (
+          <Notice
+            title={RESTART_NOTICE[status === "waiting-for-game" ? "closed" : "running"].title}
+            detail={RESTART_NOTICE[status === "waiting-for-game" ? "closed" : "running"].detail}
+          />
+        )}
 
-        {status === "install-not-found" && !settings.installPath && (
+        {lost && (
           <Notice
             title={INSTALL_NOTICE.title}
             detail={INSTALL_NOTICE.detail}
+            tone="lost"
             action={{ label: SETTINGS_LABELS.installFind, onAction: findInstall }}
           />
         )}
 
         <SettingsPanel
           settings={settings}
+          status={status}
           onChange={change}
-          onFindInstall={findInstall}
+          onFindInstall={lost ? undefined : findInstall}
           onTest={() => void bartender.tryTheCall()}
         />
       </main>

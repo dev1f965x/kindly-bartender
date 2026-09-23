@@ -45,7 +45,7 @@ describe("App", () => {
 
     act(() => calls("gold-arrived"));
 
-    expect(screen.getByText("골드 도착 · 마지막 호출 방금")).toBeInTheDocument();
+    expect(screen.getByText("방금 골드가 들어와서 불렀어요")).toBeInTheDocument();
   });
 
   it("asks for the folder when the game cannot be found", async () => {
@@ -58,13 +58,15 @@ describe("App", () => {
     expect(bartender.askForInstallFolder).toHaveBeenCalled();
   });
 
-  it("asks for a restart while the game has not picked up the new log setting", async () => {
+  it("says what to do about the logging it just turned on", async () => {
     const { says } = open({ loggingJustStarted: true });
 
-    expect(await screen.findByText("하스스톤을 한 번 껐다 켜 주세요")).toBeInTheDocument();
+    expect(await screen.findByText("기록 설정을 켰어요")).toBeInTheDocument();
+
+    act(() => says("install-not-found"));
+    expect(screen.getByText("하스스톤을 한 번 껐다 켜 주세요")).toBeInTheDocument();
 
     act(() => says("watching"));
-
     expect(screen.queryByText("하스스톤을 한 번 껐다 켜 주세요")).not.toBeInTheDocument();
   });
 

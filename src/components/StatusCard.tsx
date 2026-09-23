@@ -1,4 +1,4 @@
-import { formatSince, MOMENT_LABELS, STATUS_LABELS, WINDOW_LABELS } from "../domain/labels";
+import { formatSince, STATUS_LABELS, WINDOW_LABELS } from "../domain/labels";
 import { STATUS_TONE, type Status } from "../domain/watching";
 import type { Called } from "../shell/useWatching";
 import "./StatusCard.css";
@@ -22,7 +22,7 @@ export function StatusCard({ status, lastCall, now }: Props) {
       <p className="status__detail">{detail}</p>
       <p className="status__last">
         {lastCall
-          ? `${MOMENT_LABELS[lastCall.moment]} · ${WINDOW_LABELS.lastCall(formatSince(lastCall.at, now))}`
+          ? WINDOW_LABELS.lastCall(lastCall.moment, formatSince(lastCall.at, now))
           : WINDOW_LABELS.noCallYet}
       </p>
     </section>
