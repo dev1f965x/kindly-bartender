@@ -17,7 +17,7 @@ test("a moment is named with the time it happened", async ({ page }) => {
 
   await report(page, "moment", "combat-ended");
 
-  await expect(page.getByText("전투 종료 · 마지막 호출 방금")).toBeVisible();
+  await expect(page.getByText("방금 전투가 끝나서 불렀어요")).toBeVisible();
 });
 
 test("a switch is saved and handed to the watcher at once", async ({ page }) => {
@@ -49,7 +49,7 @@ test("the folder picker fills the install path in", async ({ page }) => {
   await page.getByRole("button", { name: "찾아보기" }).first().click();
 
   await expect(page.getByText("D:GamesHearthstone")).toBeVisible();
-  await expect(page.getByRole("button", { name: "지우기" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "자동으로 되돌리기" })).toBeVisible();
 });
 
 test("the test button calls the player back", async ({ page }) => {

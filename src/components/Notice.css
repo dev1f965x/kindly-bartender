@@ -4,9 +4,17 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--state-waiting) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
   border-radius: var(--radius-medium);
-  background: color-mix(in srgb, var(--state-waiting) 10%, transparent);
+  background: color-mix(in srgb, var(--tone) 10%, transparent);
+}
+
+.notice[data-tone="waiting"] {
+  --tone: var(--state-waiting);
+}
+
+.notice[data-tone="lost"] {
+  --tone: var(--state-lost);
 }
 
 .notice__title {

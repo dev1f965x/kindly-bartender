@@ -22,9 +22,17 @@ export const MOMENT_LABELS: Record<Moment, string> = {
   "gold-arrived": "골드 도착",
 };
 
+/** The game reads the logging setting once, at start, so what to ask depends on whether
+ * it is running. */
 export const RESTART_NOTICE = {
-  title: "하스스톤을 한 번 껐다 켜 주세요",
-  detail: "방금 게임의 기록 설정을 켰어요. 재시작해야 기록이 시작돼요",
+  running: {
+    title: "하스스톤을 한 번 껐다 켜 주세요",
+    detail: "방금 기록 설정을 켰어요. 재시작해야 기록이 시작돼요",
+  },
+  closed: {
+    title: "기록 설정을 켰어요",
+    detail: "다음에 하스스톤을 켜면 바로 지켜볼게요",
+  },
 };
 
 export const INSTALL_NOTICE = {
@@ -42,20 +50,29 @@ export const SETTINGS_LABELS = {
   test: "테스트",
   tested: "불러 봤어요",
   player: "배틀태그 이름",
-  playerHint: "# 앞부분만요. 듀오에서 받은 골드를 알아챌 때 써요",
+  playerHint: "듀오에서 파트너가 준 골드까지 알려 드려요. 배틀태그의 # 앞 이름만 적어 주세요",
   playerPlaceholder: "예: 바텐더",
   install: "하스스톤 위치",
   installFind: "찾아보기",
-  installClear: "지우기",
-  installAuto: "자동으로 찾는 중",
+  installClear: "자동으로 되돌리기",
   autostart: "윈도우 시작할 때 함께 켜기",
   autostartHint: "트레이에만 조용히 떠요",
 };
 
+/** Where the app is looking, when the player has not chosen a folder. */
+export const INSTALL_FOUND: Record<Status, string> = {
+  watching: "자동으로 찾았어요",
+  "waiting-for-game": "자동으로 찾는 중",
+  "install-not-found": "아직 못 찾았어요",
+};
+
 export const WINDOW_LABELS = {
-  close: "닫기",
   closeHint: "창을 닫아도 트레이에서 계속 지켜봐요",
-  lastCall: (when: string) => `마지막 호출 ${when}`,
+  /** The card's own line about the last call, as a sentence rather than a label. */
+  lastCall: (moment: Moment, when: string) =>
+    moment === "combat-ended"
+      ? `${when} 전투가 끝나서 불렀어요`
+      : `${when} 골드가 들어와서 불렀어요`,
   noCallYet: "아직 부른 적 없어요",
 };
 

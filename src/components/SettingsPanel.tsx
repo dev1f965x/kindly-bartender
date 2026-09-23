@@ -1,13 +1,16 @@
 import { useId, useState } from "react";
-import { SETTINGS_LABELS } from "../domain/labels";
+import { INSTALL_FOUND, SETTINGS_LABELS } from "../domain/labels";
+import type { Status } from "../domain/watching";
 import type { Settings } from "../settings/settings";
 import "./SettingsPanel.css";
 import { Toggle } from "./Toggle";
 
 interface Props {
   settings: Settings;
+  status: Status;
   onChange: (changes: Partial<Settings>) => void;
-  onFindInstall: () => void;
+  /** Left out while the notice above the panel is already offering to find it. */
+  onFindInstall?: () => void;
   onTest: () => void;
 }
 
@@ -15,7 +18,7 @@ interface Props {
 const TESTED_FOR_MS = 2000;
 
 /** Everything the player can change, in the order they meet it: the call, then the details. */
-export function SettingsPanel({ settings, onChange, onFindInstall, onTest }: Props) {
+export function SettingsPanel({ settings, status, onChange, onFindInstall, onTest }: Props) {
   const [tested, setTested] = useState(false);
   const playerId = useId();
   const installId = useId();
@@ -76,8 +79,12 @@ export function SettingsPanel({ settings, onChange, onFindInstall, onTest }: Pro
           {SETTINGS_LABELS.install}
         </label>
         <div className="settings__row">
-          <output id={installId} className="settings__path" data-empty={!settings.installPath}>
-            {settings.installPath || SETTINGS_LABELS.installAuto}
+          <output
+            id={installId}
+            className="settings__path"
+            data-chosen={Boolean(settings.installPath)}
+          >
+            {settings.installPath || INSTALL_FOUND[status]}
           </output>
           {settings.installPath ? (
             <button
@@ -88,9 +95,11 @@ export function SettingsPanel({ settings, onChange, onFindInstall, onTest }: Pro
               {SETTINGS_LABELS.installClear}
             </button>
           ) : (
-            <button type="button" className="settings__button" onClick={onFindInstall}>
-              {SETTINGS_LABELS.installFind}
-            </button>
+            onFindInstall && (
+              <button type="button" className="settings__button" onClick={onFindInstall}>
+                {SETTINGS_LABELS.installFind}
+              </button>
+            )
           )}
         </div>
       </div>

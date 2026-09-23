@@ -58,10 +58,14 @@ fn logging_just_started(state: State<'_, AppState>) -> bool {
     state.logging_just_started
 }
 
-/// Calls the player back exactly as a real moment would, so the settings can be tried out.
+/// Plays the call the player would get, without the part that would bury this window: the
+/// game coming forward is the one piece they can see working for themselves.
 #[tauri::command]
 fn try_the_call(app: AppHandle, state: State<'_, AppState>) {
-    let settings = state.settings.lock().expect("settings").clone();
+    let settings = Settings {
+        focus: false,
+        ..state.settings.lock().expect("settings").clone()
+    };
     call_the_player(&app, &settings, Moment::CombatEnded);
 }
 

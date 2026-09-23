@@ -1,7 +1,7 @@
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100%;
   background: var(--surface-base);
 }
 
@@ -35,7 +35,9 @@
   flex: 1;
   flex-direction: column;
   gap: var(--space-4);
+  min-height: 0;
   padding: var(--space-2) var(--space-5) var(--space-4);
+  overflow-y: auto;
 }
 
 /* The one thing the player has to know about a window that closes to the tray. */
