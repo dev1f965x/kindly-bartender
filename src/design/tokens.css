@@ -1,0 +1,43 @@
+:root {
+  /* A dim tavern: warm light on dark wood, so the window suits the game it watches. */
+  --surface-base: #14110f;
+  --surface-raised: #1d1917;
+  --surface-sunken: #100e0d;
+  --border-subtle: #2b2521;
+  --border-strong: #3a322c;
+
+  --accent: #e8b06a;
+  --accent-strong: #f2c489;
+  --accent-quiet: #e8b06a1f;
+
+  --text-strong: #f6efe7;
+  --text-body: #d8cec4;
+  --text-muted: #9a9088;
+  --text-faint: #6f6760;
+
+  /* The three states the app can be in, each with its own colour. */
+  --state-watching: #7cc47f;
+  --state-waiting: #d8b25c;
+  --state-lost: #d98873;
+
+  --text-small: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-title: 1.0625rem;
+  --text-large: 1.25rem;
+  --leading-body: 1.55;
+  --leading-title: 1.3;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-small: 6px;
+  --radius-medium: 12px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-raised: 0 10px 28px rgb(0 0 0 / 0.45);
+}
