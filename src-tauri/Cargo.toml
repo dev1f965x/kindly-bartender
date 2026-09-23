@@ -1,6 +1,6 @@
 [package]
 name = "kindly-bartender"
-version = "0.1.0"
+version = "1.0.0"
 description = "Calls you back to Hearthstone Battlegrounds when the shop reopens"
 authors = ["dev1f965x"]
 edition = "2021"
