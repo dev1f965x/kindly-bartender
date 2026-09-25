@@ -16,7 +16,7 @@ interface Props {
 /** How long the test button says it did something, before it offers to do it again. */
 const TESTED_FOR_MS = 2000;
 
-/** Everything the player can change, in the order they meet it: the call, then the details. */
+/** Everything the player can change, in the order it is met: the call, then the details. */
 export function SettingsPanel({ settings, status, onChange, onFindInstall, onTest }: Props) {
   const [tested, setTested] = useState(false);
   const playerId = useId();

@@ -42,8 +42,8 @@ export function useWatching(bartender: Bartender) {
     if (status === "watching") setRestartNeeded(false);
   }, [status]);
 
-  // A game that is up while nothing is being read is a game that has to restart, so the
-  // answer is worth re-asking until it is.
+  // A game running while nothing is being read has to restart, so the question is asked
+  // again until it does.
   useEffect(() => {
     if (status === "watching") return;
 

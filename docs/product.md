@@ -2,15 +2,15 @@
 
 ## Problem
 
-In Hearthstone Battlegrounds the combat phase plays itself. Players alt-tab to a browser
-or a video while it runs, and come back late to the shop, where every second is gold
-spent, minions rolled, and a board built. The game gives no sound or flash when the shop
-reopens, and a minimised window gives nothing at all.
+In Hearthstone Battlegrounds the combat phase plays itself, so players alt-tab away while
+it runs and return late to the shop, where the remaining seconds decide how much gold is
+spent and what board is built. The game gives no sound when the shop reopens, and a
+minimised window gives no indication at all.
 
 ## Who it is for
 
 Someone who plays Battlegrounds on a Windows PC and does something else during combat.
-They want the game to come and get them, and nothing else.
+What is wanted is a prompt to return, and nothing further.
 
 ## 1.0.0 scope
 

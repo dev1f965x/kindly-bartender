@@ -18,8 +18,10 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 /**
- * Reads whatever was stored, keeping only what this build understands: a file from an
- * older version, or edited by hand, must never leave the window in a broken state (ADR 7).
+ * Reads whatever was stored, keeping only what this build understands.
+ *
+ * A file from an older version, or edited by hand, falls back to the defaults per field
+ * rather than failing the read (ADR 7).
  */
 export function settingsFrom(stored: unknown): Settings {
   if (typeof stored !== "object" || stored === null) return DEFAULT_SETTINGS;

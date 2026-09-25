@@ -44,7 +44,7 @@ export const tauriBartender: Bartender = {
   },
 };
 
-/** Settings in the app data folder, beside nothing else. */
+/** Settings in the app data folder. */
 export const storeSettings: SettingsMemory = {
   async load() {
     const store = await load(SETTINGS_FILE, { autoSave: false });

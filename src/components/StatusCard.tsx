@@ -11,7 +11,7 @@ interface Props {
   now: Date;
 }
 
-/** What the app is doing, in the one line the player opens the window to read. */
+/** What the app is doing, in one line. */
 export function StatusCard({ status, detail, lastCall, now }: Props) {
   const { title, detail: fallback } = STATUS_LABELS[status];
 

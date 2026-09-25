@@ -1,7 +1,7 @@
 import type { Moment, Status } from "../domain/watching";
 import type { Settings } from "../settings/settings";
 
-/** What the window needs from the app around it, so a test can stand in for all of it. */
+/** What the window needs from the app around it, so a test can stand in for it. */
 export interface Bartender {
   /** Follows the watcher until the returned function is called. */
   watch(
@@ -10,7 +10,7 @@ export interface Bartender {
   ): Promise<() => void>;
   /** Hands the settings to the watcher and the caller. */
   apply(settings: Settings): Promise<void>;
-  /** Calls the player back as a real moment would, for trying the settings out. */
+  /** Calls the player back as a real moment would, for testing the settings. */
   tryTheCall(): Promise<void>;
   /** Whether this run turned the game's logging on, which needs the game restarted. */
   loggingJustStarted(): Promise<boolean>;

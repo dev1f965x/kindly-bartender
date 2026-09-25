@@ -8,7 +8,7 @@ interface Props {
   onChange: (checked: boolean) => void;
 }
 
-/** One setting that is either on or off, with the room to say what it does. */
+/** One setting that is either on or off, with room for a line about what it does. */
 export function Toggle({ label, hint, checked, onChange }: Props) {
   const id = useId();
 
