@@ -1,5 +1,5 @@
-//! The two things this app needs from Windows itself: where the running game lives, and
-//! how to put it back in front of the player.
+//! The two things this app needs from Windows: where the running game lives, and how to
+//! bring it back in front of the player.
 
 #[cfg(windows)]
 mod windows_impl {
@@ -51,7 +51,7 @@ mod windows_impl {
         find_process(GAME_EXE).is_some()
     }
 
-    /// Restores the game's window and puts it in front, the way Alt+Tab would.
+    /// Restores the game's window and puts it in front, as Alt+Tab would.
     pub fn bring_game_to_front() -> bool {
         let Ok(window) = (unsafe { FindWindowW(GAME_WINDOW, None) }) else {
             return false;
@@ -66,7 +66,7 @@ mod windows_impl {
         }
     }
 
-    /// The system's exclamation sound, so the app carries no audio of its own.
+    /// The system's exclamation sound, so the app ships no audio of its own.
     pub fn play_alert() {
         unsafe {
             let _ = MessageBeep(MB_ICONEXCLAMATION);

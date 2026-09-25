@@ -30,9 +30,11 @@ export interface AppProps {
 }
 
 /**
- * The whole window: the app's name, what it is doing, whatever it needs from the player,
- * and the settings. It is open only while something is being changed or checked — the work
- * happens with it closed (ADR 6).
+ * The whole window: the app's name, what it is doing, what it needs from the player, and
+ * the settings.
+ *
+ * It is open only while something is being changed or checked; the watching happens with
+ * it closed (ADR 6).
  */
 export default function App({
   bartender,
@@ -46,7 +48,7 @@ export default function App({
   const { status, lastCall, restartNeeded, gameRunning } = useWatching(bartender);
   const { settings, change } = useSettings(memory, bartender, autostart);
 
-  // Finding the game comes before anything else the window could ask for.
+  // Nothing else the window asks for matters until the game is found.
   const lost = status === "install-not-found";
 
   const findInstall = () => {

@@ -58,8 +58,8 @@ fn logging_just_started(state: State<'_, AppState>) -> bool {
     state.logging_just_started
 }
 
-/// Plays the call the player would get, without the part that would bury this window: the
-/// game coming forward is the one piece they can see working for themselves.
+/// Plays the call the player would get, without bringing the game forward, which would
+/// bury this window.
 #[tauri::command]
 fn try_the_call(app: AppHandle, state: State<'_, AppState>) {
     let settings = Settings {
@@ -128,7 +128,7 @@ fn show_window(app: &AppHandle) {
     }
 }
 
-/// The tray's tooltip is the app's only word while the window is closed.
+/// The tray's tooltip is all the app says while the window is closed.
 fn describe(status: Status) -> &'static str {
     match status {
         Status::Watching => "Kindly Bartender — 지켜보는 중",

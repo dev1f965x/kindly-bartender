@@ -58,11 +58,11 @@
   <img src="docs/window.png" alt="The window, watching" width="380">
 </div>
 
-In Battlegrounds the combat phase plays itself, so players alt-tab to a browser or a video
-and come back late to the shop, where every second is gold spent and a board built. The
-game gives no sound when the shop reopens, and a minimised window gives nothing at all.
+In Battlegrounds the combat phase plays itself, so players alt-tab away and return late to
+the shop, where the remaining seconds decide how much gold is spent. The game gives no
+sound when the shop reopens, and a minimised window gives no indication at all.
 
-This app waits in the tray and comes to get you.
+This app waits in the tray and prompts you back.
 
 - Plays a sound, shows a Windows notification, and brings Hearthstone to the front the
   moment combat ends. Each of the three can be switched off on its own.

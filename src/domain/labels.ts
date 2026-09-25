@@ -17,7 +17,7 @@ export const STATUS_LABELS: Record<Status, { title: string; detail: string }> = 
   },
 };
 
-/** The game is up, but nothing is arriving: it started before the logging was turned on. */
+/** The game is running but nothing is arriving, meaning it started before logging was on. */
 export const WAITING_WHILE_RUNNING = "하스스톤을 껐다 켜면 기록이 시작돼요";
 
 /** The game reads the logging setting once, at start, so what to ask depends on whether
@@ -68,7 +68,7 @@ export const INSTALL_FOUND: Record<Status, string> = {
 
 export const WINDOW_LABELS = {
   closeHint: "창을 닫아도 트레이에서 계속 지켜봐요",
-  /** The card's own line about the last call, as a sentence rather than a label. */
+  /** The card's line about the last call, written as a sentence. */
   lastCall: (moment: Moment, when: string) =>
     moment === "combat-ended"
       ? `${when} 전투가 끝나서 불렀어요`
@@ -87,7 +87,7 @@ export const UPDATE_LABELS = {
   retry: "다시 시도",
 };
 
-/** How long ago, in the words a person would use for a moment that just passed. */
+/** How long ago, rounded to the unit it reads best in. */
 export function formatSince(moment: Date, now: Date): string {
   const seconds = Math.max(0, Math.floor((now.getTime() - moment.getTime()) / 1000));
   if (seconds < 10) return "방금";

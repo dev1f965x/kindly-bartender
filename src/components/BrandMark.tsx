@@ -1,8 +1,9 @@
 import "./BrandMark.css";
 
 /**
- * The mark: a filled glass, waiting on the bar for the player to come back. Drawn inline so it takes the
- * palette's tokens and stays sharp at any window scale.
+ * The mark: a filled glass on a bar.
+ *
+ * Drawn inline so that it takes the palette's tokens and stays sharp at any window scale.
  */
 export function BrandMark() {
   return (

@@ -12,7 +12,7 @@ pub fn looks_like_install(path: &Path) -> bool {
 }
 
 /// The install to watch: what the player set, then where the game is running from, then
-/// the usual folders. Each is checked; the first that holds a game wins.
+/// the usual folders. The first that holds a game is used.
 pub fn find(saved: Option<&str>, running: Option<PathBuf>) -> Option<PathBuf> {
     let mut candidates = saved
         .map(PathBuf::from)
@@ -41,7 +41,7 @@ pub fn newest_log(install: &Path) -> Option<PathBuf> {
     newest.map(|(_, path)| path)
 }
 
-/// Every file under `root`, one level of folders deep, which is as deep as the game nests.
+/// Every file under `root`, one level of folders deep, which is as deep as the game goes.
 fn walk(root: &Path) -> Vec<PathBuf> {
     let mut files = Vec::new();
     let Ok(entries) = root.read_dir() else {

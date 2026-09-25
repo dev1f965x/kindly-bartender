@@ -3,8 +3,8 @@ import type { Autostart, Bartender, SettingsMemory } from "../shell/ports";
 import { DEFAULT_SETTINGS, type Settings, settingsFrom } from "./settings";
 
 /**
- * The settings the window holds, saved as they change and handed straight to the watcher,
- * so a switch takes effect before the player looks away.
+ * The settings the window holds, saved as they change and passed straight to the watcher,
+ * so a switch takes effect immediately.
  */
 export function useSettings(memory: SettingsMemory, bartender: Bartender, autostart: Autostart) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -20,8 +20,8 @@ export function useSettings(memory: SettingsMemory, bartender: Bartender, autost
       ]);
       if (cancelled) return;
 
-      // Windows itself is the truth about starting with Windows; the stored flag only
-      // remembers what the switch looked like.
+      // Windows holds whether the app starts with it; the stored flag only records what
+      // the switch was last set to.
       const settings = { ...settingsFrom(stored), autostart: startsWithWindows };
       loaded.current = true;
       setSettings(settings);
