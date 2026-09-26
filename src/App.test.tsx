@@ -26,18 +26,18 @@ describe("App", () => {
   it("waits for the game until the watcher says otherwise", async () => {
     open();
 
-    expect(await screen.findByText("하스스톤을 기다리는 중")).toBeInTheDocument();
-    expect(screen.getByText("아직 부른 적 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("하스스톤 대기 중")).toBeInTheDocument();
+    expect(screen.getByText("호출 기록 없음")).toBeInTheDocument();
   });
 
   it("says it is watching once a log is being read", async () => {
     const { says } = open();
-    await screen.findByText("하스스톤을 기다리는 중");
+    await screen.findByText("하스스톤 대기 중");
 
     act(() => says("watching"));
 
-    expect(screen.getByText("지켜보는 중")).toBeInTheDocument();
-    expect(screen.getByText("전투가 끝나면 불러 드릴게요")).toBeInTheDocument();
+    expect(screen.getByText("감시 중")).toBeInTheDocument();
+    expect(screen.getByText("전투가 끝나면 호출합니다")).toBeInTheDocument();
   });
 
   it("names the last call and when it happened", async () => {
@@ -46,7 +46,7 @@ describe("App", () => {
 
     act(() => calls("gold-arrived"));
 
-    expect(screen.getByText("방금 골드가 들어와서 불렀어요")).toBeInTheDocument();
+    expect(screen.getByText("방금 골드 수신으로 호출")).toBeInTheDocument();
   });
 
   it("asks for the folder when the game cannot be found", async () => {
@@ -54,7 +54,7 @@ describe("App", () => {
 
     act(() => says("install-not-found"));
 
-    expect(screen.getByText("하스스톤을 못 찾았어요")).toBeInTheDocument();
+    expect(screen.getByText("하스스톤을 찾지 못했습니다")).toBeInTheDocument();
     await userEvent.click(screen.getAllByRole("button", { name: "찾아보기" })[0]);
     expect(bartender.askForInstallFolder).toHaveBeenCalled();
   });
@@ -62,32 +62,32 @@ describe("App", () => {
   it("tells a closed game to start and a running one to restart", async () => {
     const { says } = open({ loggingJustStarted: true });
 
-    expect(await screen.findByText("기록 설정을 켰어요")).toBeInTheDocument();
+    expect(await screen.findByText("기록 설정 적용됨")).toBeInTheDocument();
 
     act(() => says("watching"));
-    expect(screen.queryByText("기록 설정을 켰어요")).not.toBeInTheDocument();
+    expect(screen.queryByText("기록 설정 적용됨")).not.toBeInTheDocument();
   });
 
   it("asks a running game for a restart, since it read the setting at launch", async () => {
     open({ loggingJustStarted: true, gameRunning: true });
 
-    expect(await screen.findByText("하스스톤을 한 번 껐다 켜 주세요")).toBeInTheDocument();
-    expect(screen.getByText("하스스톤을 껐다 켜면 기록이 시작돼요")).toBeInTheDocument();
+    expect(await screen.findByText("하스스톤 재시작 필요")).toBeInTheDocument();
+    expect(screen.getByText("하스스톤을 재시작해야 기록이 시작됩니다")).toBeInTheDocument();
   });
 
   it("puts finding the game before anything else it might ask", async () => {
     const { says } = open({ loggingJustStarted: true, gameRunning: true });
-    await screen.findByText("하스스톤을 한 번 껐다 켜 주세요");
+    await screen.findByText("하스스톤 재시작 필요");
 
     act(() => says("install-not-found"));
 
-    expect(screen.getByText("설치 폴더를 알려 주세요")).toBeInTheDocument();
-    expect(screen.queryByText("하스스톤을 한 번 껐다 켜 주세요")).not.toBeInTheDocument();
+    expect(screen.getByText("설치 폴더 지정 필요")).toBeInTheDocument();
+    expect(screen.queryByText("하스스톤 재시작 필요")).not.toBeInTheDocument();
   });
 
   it("saves a switch and hands it to the watcher at once", async () => {
     const { memory, bartender } = open();
-    await screen.findByText("하스스톤을 기다리는 중");
+    await screen.findByText("하스스톤 대기 중");
 
     await userEvent.click(screen.getByRole("switch", { name: /소리/ }));
 
@@ -98,15 +98,15 @@ describe("App", () => {
   it("tries the call out on request", async () => {
     const { bartender } = open();
 
-    await userEvent.click(screen.getByRole("button", { name: "불러 보기" }));
+    await userEvent.click(screen.getByRole("button", { name: "호출 시험" }));
 
     expect(bartender.tryTheCall).toHaveBeenCalledOnce();
-    expect(screen.getByRole("button", { name: "불러 봤어요" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "호출했습니다" })).toBeInTheDocument();
   });
 
   it("keeps the player's name for the gold signal", async () => {
     const { memory } = open();
-    await screen.findByText("하스스톤을 기다리는 중");
+    await screen.findByText("하스스톤 대기 중");
 
     await userEvent.type(screen.getByLabelText(/배틀태그 이름/), "바텐더");
 
@@ -116,6 +116,6 @@ describe("App", () => {
   it("says the window can be closed", () => {
     open();
 
-    expect(screen.getByText("창을 닫아도 트레이에서 계속 지켜봐요")).toBeInTheDocument();
+    expect(screen.getByText("창을 닫아도 트레이에서 감시합니다")).toBeInTheDocument();
   });
 });

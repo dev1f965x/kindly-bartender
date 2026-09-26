@@ -67,7 +67,7 @@ const SHOTS: Shot[] = [
     stores: settled,
     act: async (page) => {
       await watching(page);
-      await page.getByRole("button", { name: "불러 보기" }).click();
+      await page.getByRole("button", { name: "호출 시험" }).click();
     },
   },
   {

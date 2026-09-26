@@ -3,12 +3,12 @@ import { invoked, openWindow, report, stored } from "./app";
 
 test("the window waits for the game, then says it is watching", async ({ page }) => {
   await openWindow(page);
-  await expect(page.getByText("하스스톤을 기다리는 중")).toBeVisible();
+  await expect(page.getByText("하스스톤 대기 중")).toBeVisible();
 
   await report(page, "status", "watching");
 
-  await expect(page.getByText("지켜보는 중")).toBeVisible();
-  await expect(page.getByText("아직 부른 적 없어요")).toBeVisible();
+  await expect(page.getByText("감시 중")).toBeVisible();
+  await expect(page.getByText("호출 기록 없음")).toBeVisible();
 });
 
 test("a moment is named with the time it happened", async ({ page }) => {
@@ -17,13 +17,13 @@ test("a moment is named with the time it happened", async ({ page }) => {
 
   await report(page, "moment", "combat-ended");
 
-  await expect(page.getByText("방금 전투가 끝나서 불렀어요")).toBeVisible();
+  await expect(page.getByText("방금 전투 종료로 호출")).toBeVisible();
 });
 
 test("a switch is saved and handed to the watcher at once", async ({ page }) => {
   await openWindow(page);
 
-  await page.getByRole("switch", { name: /하스스톤 창 앞으로/ }).click();
+  await page.getByRole("switch", { name: /하스스톤 창 전환/ }).click();
 
   await expect
     .poll(() => stored(page, "settings.json", "settings"))
@@ -49,14 +49,14 @@ test("the folder picker fills the install path in", async ({ page }) => {
   await page.getByRole("button", { name: "찾아보기" }).first().click();
 
   await expect(page.getByText("D:GamesHearthstone")).toBeVisible();
-  await expect(page.getByRole("button", { name: "자동으로 되돌리기" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "자동 탐색으로" })).toBeVisible();
 });
 
 test("the test button calls the player back", async ({ page }) => {
   await openWindow(page);
 
-  await page.getByRole("button", { name: "불러 보기" }).click();
+  await page.getByRole("button", { name: "호출 시험" }).click();
 
-  await expect(page.getByRole("button", { name: "불러 봤어요" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "호출했습니다" })).toBeVisible();
   expect(await invoked(page, "try_the_call")).toHaveLength(1);
 });
