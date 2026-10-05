@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "Asia/Seoul",
+  "schedule": ["before 9am on monday"],
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "description": "Pin the Dev Container image by digest so a rebuild uses a reviewed image.",
+      "matchManagers": ["devcontainer"],
+      "matchDepTypes": ["image"],
+      "pinDigests": true
+    },
+    {
+      "description": "Merge low-risk dev dependency patches after CI passes; 0.x has no compatibility promise.",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^v?0\\./",
+      "automerge": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "minimumReleaseAge": null
+  },
+  "automergeStrategy": "squash"
+}
