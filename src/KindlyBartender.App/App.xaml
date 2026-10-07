@@ -50,10 +50,6 @@
             <Setter Property="Padding" Value="16,12" />
             <Setter Property="Margin" Value="{StaticResource GroupGap}" />
         </Style>
-        <!-- A message with an info mark; the caution color is only on the mark, so it never carries meaning alone. -->
-        <Style x:Key="MessageCard" TargetType="Border" BasedOn="{StaticResource Card}">
-            <Setter Property="AutomationProperties.LiveSetting" Value="Polite" />
-        </Style>
         <Style x:Key="ButtonRow" TargetType="StackPanel">
             <Setter Property="Orientation" Value="Horizontal" />
             <Setter Property="HorizontalAlignment" Value="Right" />

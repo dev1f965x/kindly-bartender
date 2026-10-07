@@ -47,7 +47,7 @@ public partial class App : Application
         // Before the tray icon exists, so it and the notifications carry the app ID.
         AppIdentity.Register("Kindly Bartender", iconPath: null);
 
-        _shell = new AppShell(Dispatcher);
+        _shell = new AppShell(Dispatcher, AppPaths.DataFolder, new StartupEntry());
         var windows = new WindowHost(_shell);
         _shell.WindowRequested += windows.Show;
         _shell.ExitRequested += windows.CloseAll;

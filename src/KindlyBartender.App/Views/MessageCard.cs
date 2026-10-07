@@ -28,7 +28,8 @@ internal sealed class MessageCard : Border
     public MessageCard()
     {
         SetResourceReference(StyleProperty, "Card");
-        AutomationProperties.SetLiveSetting(this, AutomationLiveSetting.Polite);
+        // On the text, whose peer is a control element; screen readers ignore live regions on a plain Border.
+        AutomationProperties.SetLiveSetting(_text, AutomationLiveSetting.Polite);
         _text.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorPrimaryBrush");
 
         var grid = new Grid();
@@ -52,7 +53,6 @@ internal sealed class MessageCard : Border
         _text.Text = text;
         _mark.Text = warning ? WarningGlyph : InfoGlyph;
         _mark.SetResourceReference(TextBlock.ForegroundProperty, warning ? "SystemFillColorCautionBrush" : "TextFillColorSecondaryBrush");
-        AutomationProperties.SetName(this, text);
         Visibility = Visibility.Visible;
         if (AutomationPeer() is { } peer)
         {
@@ -63,6 +63,6 @@ internal sealed class MessageCard : Border
     public void Hide() => Visibility = Visibility.Collapsed;
 
     private System.Windows.Automation.Peers.AutomationPeer? AutomationPeer() =>
-        System.Windows.Automation.Peers.UIElementAutomationPeer.FromElement(this)
-        ?? System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(this);
+        System.Windows.Automation.Peers.UIElementAutomationPeer.FromElement(_text)
+        ?? System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(_text);
 }

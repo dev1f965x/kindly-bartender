@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <!-- The release workflow sets the version from the tag; this is the version being built. -->
+    <Version>0.1.0</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

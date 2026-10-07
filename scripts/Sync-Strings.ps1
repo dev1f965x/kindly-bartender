@@ -29,6 +29,11 @@ foreach ($line in Get-Content (Join-Path $root 'CONTENT.md') -Encoding utf8) {
     }
     $english[$id] = $Matches[2].Trim()
     $korean[$id] = $Matches[3].Trim()
+    # Both languages must use the same placeholders, or formatting fails at run time.
+    $placeholders = { param($text) ([regex]::Matches($text, '\{\d+\}') | ForEach-Object Value | Sort-Object -Unique) -join ',' }
+    if ((& $placeholders $english[$id]) -ne (& $placeholders $korean[$id])) {
+        throw "Placeholders differ between English and Korean in CONTENT.md: $id"
+    }
 }
 
 function ConvertTo-Resx([System.Collections.Specialized.OrderedDictionary]$strings) {

@@ -23,14 +23,17 @@ internal sealed partial class SettingsWindow : Window
         _shell = shell;
         InitializeComponent();
         MaxHeight = SystemParameters.WorkArea.Height * 0.9;
-        PreviewKeyDown += (_, e) =>
+        // KeyDown, not PreviewKeyDown, so Escape first closes an open language list.
+        KeyDown += (_, e) =>
         {
-            if (e.Key == Key.Escape)
+            if (e.Key == Key.Escape && !e.Handled)
             {
                 Close();
             }
         };
         shell.DoNotDisturbChanged += ShowDoNotDisturb;
+        // Setup may have changed options while this window was open.
+        Activated += (_, _) => Load(_shell.Settings);
         Closed += (_, _) => shell.DoNotDisturbChanged -= ShowDoNotDisturb;
 
         ApplyText();
@@ -79,11 +82,13 @@ internal sealed partial class SettingsWindow : Window
         _loading = false;
     }
 
+    private void ShowDoNotDisturb() => ShowDoNotDisturb(_shell.MayHideNotifications);
+
     /// <summary>With Do not disturb on, the link moves into the message card (wireframe 3).</summary>
-    private void ShowDoNotDisturb()
+    internal void ShowDoNotDisturb(bool mayHide)
     {
         DetachLink();
-        if (_shell.MayHideNotifications)
+        if (mayHide)
         {
             DoNotDisturbMessage.Show(Strings.Get("Settings.DoNotDisturb"), warning: true);
             DoNotDisturbMessage.Extras.Add(_link);
@@ -101,20 +106,24 @@ internal sealed partial class SettingsWindow : Window
         NotificationSettingsLink.Content = null;
     }
 
+    /// <summary>Writes only the option that was clicked, so a change made in another window is never undone.</summary>
     private void OnChanged(object sender, RoutedEventArgs e)
     {
-        if (_loading)
+        if (_loading || sender is not CheckBox box)
         {
             return;
         }
 
-        _shell.UpdateSettings(_shell.Settings with
+        var on = box.IsChecked == true;
+        var settings = _shell.Settings;
+        _shell.UpdateSettings(box.Name switch
         {
-            ShowNotification = ToastBox.IsChecked == true,
-            PlaySound = SoundBox.IsChecked == true,
-            FlashTaskbar = FlashBox.IsChecked == true,
-            BringToFront = BringToFrontBox.IsChecked == true,
-            StartWithWindows = StartWithWindowsBox.IsChecked == true,
+            nameof(ToastBox) => settings with { ShowNotification = on },
+            nameof(SoundBox) => settings with { PlaySound = on },
+            nameof(FlashBox) => settings with { FlashTaskbar = on },
+            nameof(BringToFrontBox) => settings with { BringToFront = on },
+            nameof(StartWithWindowsBox) => settings with { StartWithWindows = on },
+            _ => settings,
         });
     }
 

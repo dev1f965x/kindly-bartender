@@ -14,11 +14,18 @@ internal sealed partial class SetupWindow : Window
     internal const string LogConfigDisplayPath = @"%LOCALAPPDATA%\Blizzard\Hearthstone\log.config";
 
     private readonly AppShell _shell;
+    private readonly Func<string?, bool> _isInstallFolder;
     private string? _folder;
+    private bool _settingUp;
 
-    public SetupWindow(AppShell shell)
+    /// <param name="shell">The app shell.</param>
+    /// <param name="isInstallFolder">Checks a Hearthstone folder; screenshots pass a stand-in so no real folder is shown.</param>
+    public SetupWindow(AppShell shell, Func<string?, bool>? isInstallFolder = null)
     {
         _shell = shell;
+        _isInstallFolder = isInstallFolder ?? InstallLocator.IsInstallFolder;
+        // While setup runs, the window stays open so the result has somewhere to appear.
+        Closing += (_, e) => e.Cancel = _settingUp;
         _folder = shell.InstallFolder;
         InitializeComponent();
         MaxHeight = SystemParameters.WorkArea.Height * 0.9;
@@ -47,7 +54,7 @@ internal sealed partial class SetupWindow : Window
 
     private void ShowFolder()
     {
-        var found = InstallLocator.IsInstallFolder(_folder);
+        var found = _isInstallFolder(_folder);
         FolderPanel.Visibility = found ? Visibility.Collapsed : Visibility.Visible;
         FilesPanel.Visibility = found ? Visibility.Visible : Visibility.Collapsed;
         SetUpButton.IsEnabled = found;
@@ -68,9 +75,14 @@ internal sealed partial class SetupWindow : Window
         var dialog = new OpenFolderDialog { Title = Strings.Get("Setup.Folder.Choose") };
         if (dialog.ShowDialog(this) == true)
         {
-            _folder = dialog.FolderName;
-            ShowFolder();
+            UseFolder(dialog.FolderName);
         }
+    }
+
+    internal void UseFolder(string folder)
+    {
+        _folder = folder;
+        ShowFolder();
     }
 
     private async void OnSetUp(object sender, RoutedEventArgs e)
@@ -82,6 +94,7 @@ internal sealed partial class SetupWindow : Window
 
         SetUpButton.IsEnabled = false;
         CloseButton.IsEnabled = false;
+        _settingUp = true;
         ResultMessage.Hide();
         SetupResult result;
         try
@@ -94,15 +107,16 @@ internal sealed partial class SetupWindow : Window
             result = SetupResult.Failed;
         }
 
+        _settingUp = false;
         CloseButton.IsEnabled = true;
-        ShowResult(result);
+        ShowResult(result, _shell.RestartNeeded);
     }
 
-    private void ShowResult(SetupResult result)
+    internal void ShowResult(SetupResult result, bool restartNeeded)
     {
         var (id, warning) = result switch
         {
-            SetupResult.Done when _shell.RestartNeeded => ("Setup.RestartNeeded", false),
+            SetupResult.Done or SetupResult.AlreadySet when restartNeeded => ("Setup.RestartNeeded", false),
             SetupResult.Done or SetupResult.AlreadySet => ("Setup.Done", false),
             SetupResult.ElevationCancelled => ("Setup.Elevation.Cancelled", true),
             SetupResult.FileNotEditable => ("Setup.NotEditable", true),
@@ -115,6 +129,7 @@ internal sealed partial class SetupWindow : Window
             // Only Close is left; it becomes the default button.
             SetUpButton.Visibility = Visibility.Collapsed;
             CloseButton.IsDefault = true;
+            CloseButton.Style = (Style)FindResource("PrimaryRowButton");
             CloseButton.Focus();
         }
         else

@@ -68,7 +68,7 @@ public sealed class StartupAndInstanceTests : IDisposable
     public void Language_setting_picks_the_strings()
     {
         Strings.UseLanguage("ko");
-        Assert.Equal("종료", Strings.Get("Tray.Menu.Exit"));
+        Assert.Equal(Strings.KeepKoreanWordsWhole("종료"), Strings.Get("Tray.Menu.Exit"));
 
         Strings.UseLanguage("en");
         Assert.Equal("Exit", Strings.Get("Tray.Menu.Exit"));
