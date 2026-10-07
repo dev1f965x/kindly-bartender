@@ -144,6 +144,75 @@ public class GameTrackerTests
     }
 
     [Fact]
+    public void Waiting_reports_recruit_straight_from_the_board_state()
+    {
+        Feed(LogLines.BattlegroundsGameStart(("TURN", "4")));
+
+        Assert.Equal([new PhaseStarted(Phase.Recruit)], Feed(Change("BOARD_VISUAL_STATE", "1")));
+    }
+
+    [Fact]
+    public void Turn_one_without_hero_selection_still_reports_the_first_recruit()
+    {
+        var outputs = Feed(LogLines.BattlegroundsGameStart().Concat([Change("TURN", "1"), Change("STEP", "MAIN_READY")]));
+
+        Assert.Equal([new PhaseStarted(Phase.Recruit)], outputs);
+    }
+
+    [Fact]
+    public void Board_state_during_hero_selection_does_not_report_an_early_recruit()
+    {
+        var outputs = Feed(LogLines.BattlegroundsGameStart().Concat([Change("STEP", "BEGIN_MULLIGAN"), Change("BOARD_VISUAL_STATE", "1")]));
+
+        Assert.Equal([new PhaseStarted(Phase.HeroSelection)], outputs);
+        Assert.Equal(TrackerState.HeroSelection, _tracker.State);
+    }
+
+    [Fact]
+    public void Completed_game_in_starting_tags_ends_tracking_without_a_later_failure()
+    {
+        Feed(LogLines.BattlegroundsGameStart(("STATE", "COMPLETE")));
+
+        _clock.Advance(TimeSpan.FromMinutes(30));
+
+        Assert.Equal(TrackerState.NoGame, _tracker.State);
+        Assert.Null(_tracker.CheckDeadline());
+    }
+
+    [Fact]
+    public void Another_game_type_during_a_Battlegrounds_game_ends_it()
+    {
+        Feed(ToFirstRecruit());
+
+        Feed(LogLines.GameStart("GT_RANKED"));
+
+        Assert.Equal(TrackerState.NoGame, _tracker.State);
+        Assert.Empty(Feed(Change("BOARD_VISUAL_STATE", "1")));
+    }
+
+    [Fact]
+    public void Another_game_type_ends_spectating_when_the_end_marker_was_missed()
+    {
+        Feed(LogLines.GameState("Begin Spectating"));
+
+        Feed(LogLines.GameStart("GT_RANKED"));
+
+        Assert.Equal(TrackerState.NoGame, _tracker.State);
+    }
+
+    [Fact]
+    public void Repeated_create_game_restarts_the_deadline()
+    {
+        Feed(LogLines.BattlegroundsGameStart());
+        _clock.Advance(TimeSpan.FromMinutes(4));
+
+        Feed(LogLines.BattlegroundsGameStart());
+        _clock.Advance(TimeSpan.FromMinutes(4));
+
+        Assert.Null(_tracker.CheckDeadline());
+    }
+
+    [Fact]
     public void Back_to_back_games_both_report()
     {
         var first = Feed(ToFirstRecruit().Append(Change("STATE", "COMPLETE")));

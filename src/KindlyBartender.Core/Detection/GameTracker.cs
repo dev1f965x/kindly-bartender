@@ -75,10 +75,14 @@ public sealed class GameTracker(IMonotonicClock clock)
         }
     }
 
-    /// <summary>Forgets the game, for a new log folder or when Hearthstone exits.</summary>
+    /// <summary>Forgets the game and any failure, for a new log folder or when Hearthstone exits.</summary>
     public void Reset()
     {
         State = TrackerState.NoGame;
+        Rebuilding = false;
+        _startingTurn = 0;
+        _startingBoardState = null;
+        _recruitSeen = false;
         _deadlineStart = null;
         IsFailing = false;
         _failureReported = false;
@@ -98,7 +102,8 @@ public sealed class GameTracker(IMonotonicClock clock)
     /// <summary>Call regularly; reports a failure once when a game passes the Recruit deadline.</summary>
     public TrackerOutput? CheckDeadline()
     {
-        if (Rebuilding || _deadlineStart is null || _recruitSeen || clock.Now - _deadlineStart < RecruitDeadline)
+        if (Rebuilding || !IsBattlegroundsGame || _recruitSeen
+            || _deadlineStart is not { } start || clock.Now - start < RecruitDeadline)
         {
             return null;
         }
@@ -115,8 +120,9 @@ public sealed class GameTracker(IMonotonicClock clock)
         var isBattlegrounds = created.GameType == BattlegroundsGameType
             || (created.GameType is null && IsBattlegroundsGame);
 
-        // A spectated game stays spectated even when the log prints a new game for it.
-        if (State == TrackerState.Spectating)
+        // A spectated Battlegrounds game stays spectated even when the log prints a new game for it.
+        // Another game type ends spectating, in case the unverified end marker was missed.
+        if (State == TrackerState.Spectating && created.GameType is null or BattlegroundsGameType)
         {
             return null;
         }
@@ -159,13 +165,13 @@ public sealed class GameTracker(IMonotonicClock clock)
                 _startingBoardState = boardState;
                 break;
             case GameTag.State when starting.Value == "COMPLETE":
-                State = TrackerState.NoGame;
-                return null;
+                return Enter(TrackerState.NoGame);
             default:
                 return null;
         }
 
-        // Starting tags set where a repeated game is without reporting it; only changes are reported.
+        // Starting tags restore the phase of a repeated game silently; only TAG_CHANGE lines report.
+        // The state is worked out again after each tag because their order is not guaranteed.
         State = (_startingBoardState, _startingTurn) switch
         {
             (2, _) => TrackerState.Combat,
@@ -197,8 +203,10 @@ public sealed class GameTracker(IMonotonicClock clock)
             (TrackerState.Waiting, GameTag.Step, "BEGIN_MULLIGAN", _) => Start(TrackerState.HeroSelection, Phase.HeroSelection),
             (TrackerState.Waiting or TrackerState.HeroSelection, GameTag.Turn, "1", _) => Enter(TrackerState.FirstTurnPending),
             (TrackerState.FirstTurnPending, GameTag.Step, "MAIN_READY", _) => Start(TrackerState.Recruit, Phase.Recruit),
+            // Any game state may move to Combat, so a missed first-turn signal cannot stall the game;
+            // only Waiting and Combat may report a Recruit phase from the board state.
             (_, GameTag.BoardVisualState, _, 2) => Enter(TrackerState.Combat),
-            (not TrackerState.Recruit, GameTag.BoardVisualState, _, 1) => Start(TrackerState.Recruit, Phase.Recruit),
+            (TrackerState.Waiting or TrackerState.Combat, GameTag.BoardVisualState, _, 1) => Start(TrackerState.Recruit, Phase.Recruit),
             _ => null,
         };
     }
@@ -235,6 +243,7 @@ public sealed class GameTracker(IMonotonicClock clock)
 
     private DetectionFailing? Fail(DetectionFailure reason)
     {
+        // During a rebuild nothing is reported, but the tray still reads IsFailing.
         IsFailing = true;
         if (Rebuilding || _failureReported)
         {
