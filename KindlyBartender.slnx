@@ -3,4 +3,7 @@
     <Project Path="src/KindlyBartender.App/KindlyBartender.App.csproj" />
     <Project Path="src/KindlyBartender.Core/KindlyBartender.Core.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KindlyBartender.Core.Tests/KindlyBartender.Core.Tests.csproj" />
+  </Folder>
 </Solution>
