@@ -92,7 +92,7 @@ internal static class TrayIconRenderer
         using var png = new MemoryStream();
         bitmap.Save(png, ImageFormat.Png);
 
-        var ico = new MemoryStream();
+        using var ico = new MemoryStream();
         using (var writer = new BinaryWriter(ico, System.Text.Encoding.UTF8, leaveOpen: true))
         {
             writer.Write((short)0);

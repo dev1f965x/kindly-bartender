@@ -16,6 +16,7 @@ internal sealed class SingleInstance : IDisposable
     private readonly string _pipeName;
     private readonly CancellationTokenSource _stop = new();
     private readonly bool _owned;
+    private Task? _listener;
 
     public SingleInstance(string appName)
     {
@@ -47,7 +48,7 @@ internal sealed class SingleInstance : IDisposable
 
     /// <summary>Listens for later copies; <paramref name="onShow"/> runs on a background thread.</summary>
     public void Listen(Action onShow, Action<string, Exception> onError) =>
-        _ = Task.Run(async () =>
+        _listener = Task.Run(async () =>
         {
             while (!_stop.IsCancellationRequested)
             {
@@ -56,19 +57,23 @@ internal sealed class SingleInstance : IDisposable
                     await using var server = new NamedPipeServerStream(
                         _pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
                     await server.WaitForConnectionAsync(_stop.Token).ConfigureAwait(false);
-                    using var reader = new StreamReader(server);
-                    var message = await reader.ReadToEndAsync(_stop.Token).ConfigureAwait(false);
-                    if (message == ShowMessage)
+                    // A client that connects and never sends must not block later copies.
+                    using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token);
+                    timeout.CancelAfter(TimeSpan.FromSeconds(2));
+                    var buffer = new byte[ShowMessage.Length];
+                    var read = await server.ReadAtLeastAsync(buffer, buffer.Length, throwOnEndOfStream: false, timeout.Token).ConfigureAwait(false);
+                    if (System.Text.Encoding.UTF8.GetString(buffer, 0, read) == ShowMessage)
                     {
                         onShow();
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (_stop.IsCancellationRequested)
                 {
                     return;
                 }
-                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+                catch (Exception e)
                 {
+                    // Anything else is logged and the listener keeps going, so a later copy can still reach it.
                     onError("Listen for another copy of the app", e);
                     // Avoid a tight loop if the pipe keeps failing.
                     await Task.Delay(TimeSpan.FromSeconds(5), _stop.Token).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
@@ -79,7 +84,12 @@ internal sealed class SingleInstance : IDisposable
     public void Dispose()
     {
         _stop.Cancel();
-        _stop.Dispose();
+        // Wait briefly so the listener never uses the token source after it is disposed.
+        if (_listener?.Wait(TimeSpan.FromSeconds(1)) != false)
+        {
+            _stop.Dispose();
+        }
+
         if (_owned)
         {
             _mutex.ReleaseMutex();

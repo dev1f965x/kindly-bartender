@@ -69,7 +69,8 @@ public sealed class SettingsStoreTests : IDisposable
 
         Assert.Equal(SettingsLoadResult.Broken, result);
         Assert.Equal(new AppSettings(), settings);
-        Assert.Equal("{ not json", File.ReadAllText(SettingsPath + ".broken"));
+        var broken = Assert.Single(Directory.GetFiles(_folder, "settings.json.*.broken"));
+        Assert.Equal("{ not json", File.ReadAllText(broken));
         Assert.False(File.Exists(SettingsPath));
     }
 
@@ -82,10 +83,41 @@ public sealed class SettingsStoreTests : IDisposable
         var store = new SettingsStore(SettingsPath);
 
         var (_, result) = store.Load();
-        store.Save(new AppSettings());
+        Assert.False(store.Save(new AppSettings()));
 
         Assert.Equal(SettingsLoadResult.TooNew, result);
         Assert.False(store.CanSave);
         Assert.Equal(newer, File.ReadAllText(SettingsPath));
+    }
+
+    [Fact]
+    public void Locked_file_is_left_alone()
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(SettingsPath, """{ "schemaVersion": 1, "playSound": false }""");
+        var store = new SettingsStore(SettingsPath);
+
+        SettingsLoadResult result;
+        using (new FileStream(SettingsPath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            (_, result) = store.Load();
+        }
+
+        Assert.Equal(SettingsLoadResult.Unreadable, result);
+        Assert.False(store.Save(new AppSettings()));
+        Assert.Contains("playSound", File.ReadAllText(SettingsPath), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("\"fr\"")]
+    [InlineData("null")]
+    public void Unknown_language_falls_back_to_Windows(string language)
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(SettingsPath, $$"""{ "schemaVersion": 1, "language": {{language}} }""");
+
+        var (settings, _) = new SettingsStore(SettingsPath).Load();
+
+        Assert.Equal(AppSettings.SystemLanguage, settings.Language);
     }
 }

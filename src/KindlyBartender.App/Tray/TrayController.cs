@@ -17,10 +17,19 @@ internal sealed class TrayController : IDisposable
     private readonly ContextMenuStrip _menu = new();
     private Icon? _currentIcon;
     private TrayView? _view;
+    private string? _language;
+    private bool _lightTaskbar = TrayIconRenderer.IsTaskbarLight();
 
     public TrayController()
     {
         _icon.ContextMenuStrip = _menu;
+
+        // Built each time it opens, so an open menu is never rebuilt under the cursor.
+        _menu.Opening += (_, e) =>
+        {
+            BuildMenu();
+            e.Cancel = false;
+        };
         _icon.Visible = true;
     }
 
@@ -28,31 +37,38 @@ internal sealed class TrayController : IDisposable
 
     public event Action? ExitRequested;
 
-    /// <summary>Extra menu items added by other parts of the app, shown above About and Exit.</summary>
+    /// <summary>Creates the extra menu items, shown between the status and Pause. Called each time the menu opens.</summary>
     public Func<IEnumerable<ToolStripItem>>? ExtraItems { get; set; }
 
+    /// <summary>Shows the state. Cheap when nothing changed, so it can run on every poll.</summary>
     public void Show(TrayView view)
     {
+        if (view == _view && Strings.Culture.Name == _language)
+        {
+            return;
+        }
+
         _view = view;
+        _language = Strings.Culture.Name;
         var status = Strings.Get(StatusTextId(view.Status));
         var tooltip = view.DoNotDisturb ? $"{status}\n{Strings.Get("Tray.Status.DoNotDisturb")}" : status;
         // NotifyIcon allows 127 characters.
         _icon.Text = tooltip.Length > 127 ? tooltip[..127] : tooltip;
 
         var previous = _currentIcon;
-        _currentIcon = TrayIconRenderer.Create(view.Status, TrayIconRenderer.IsTaskbarLight(), SystemInformation.SmallIconSize.Width);
+        _currentIcon = TrayIconRenderer.Create(view.Status, _lightTaskbar, SystemInformation.SmallIconSize.Width);
         _icon.Icon = _currentIcon;
         previous?.Dispose();
-
-        BuildMenu(view, status);
     }
 
     /// <summary>Redraws the icon, for example after the taskbar theme changes.</summary>
     public void Refresh()
     {
-        if (_view is not null)
+        _lightTaskbar = TrayIconRenderer.IsTaskbarLight();
+        if (_view is { } view)
         {
-            Show(_view);
+            _view = null;
+            Show(view);
         }
     }
 
@@ -74,8 +90,14 @@ internal sealed class TrayController : IDisposable
         _ => "Tray.Status.Ready",
     };
 
-    private void BuildMenu(TrayView view, string status)
+    private void BuildMenu()
     {
+        if (_view is not { } view)
+        {
+            return;
+        }
+
+        var status = Strings.Get(StatusTextId(view.Status));
         foreach (ToolStripItem item in _menu.Items.Cast<ToolStripItem>().ToList())
         {
             item.Dispose();

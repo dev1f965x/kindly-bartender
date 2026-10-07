@@ -42,6 +42,9 @@ internal sealed class AppShell : IDisposable
     private bool _setupNeeded;
     private bool _restartNeeded;
     private bool _paused;
+    private Task<SetupResult>? _setup;
+    private int _pollFailures;
+    private string? _lastPollError;
 
     public AppShell(Dispatcher dispatcher)
     {
@@ -49,7 +52,7 @@ internal sealed class AppShell : IDisposable
 
         var (settings, result) = _store.Load();
         Settings = settings;
-        if (result is SettingsLoadResult.Broken or SettingsLoadResult.TooNew)
+        if (result is SettingsLoadResult.Broken or SettingsLoadResult.Unreadable or SettingsLoadResult.TooNew)
         {
             DiagnosticLog.Info($"Settings not loaded ({result}); defaults are used.");
         }
@@ -103,7 +106,8 @@ internal sealed class AppShell : IDisposable
             ApplyStartup();
         }
 
-        CheckSetup(notify: true);
+        // In a normal start the Setup window opens, so a notification would say the same thing twice.
+        CheckSetup(notify: background);
         _timer.Start();
 
         if (_setupNeeded && !background)
@@ -146,20 +150,35 @@ internal sealed class AppShell : IDisposable
     /// Records the player's agreement and options, then changes the log settings off the UI thread
     /// (PRD FR3 to FR6). Only the files' log settings are touched.
     /// </summary>
-    public async Task<SetupResult> RunSetupAsync(string installFolder, bool startWithWindows, bool bringToFront)
+    public Task<SetupResult> RunSetupAsync(string installFolder, bool startWithWindows, bool bringToFront)
+    {
+        // A second request while one runs gets the same result, so a double click never writes twice or asks
+        // twice for administrator rights.
+        if (_setup is { IsCompleted: false })
+        {
+            return _setup;
+        }
+
+        _setup = RunSetupCoreAsync(installFolder, startWithWindows, bringToFront);
+        return _setup;
+    }
+
+    private async Task<SetupResult> RunSetupCoreAsync(string installFolder, bool startWithWindows, bool bringToFront)
     {
         UpdateSettings(Settings with
         {
             SetupAgreedAt = DateTimeOffset.Now,
             StartWithWindows = startWithWindows,
             BringToFront = bringToFront,
-            InstallFolder = installFolder == InstallLocator.Find(null) ? Settings.InstallFolder : installFolder,
+            // Stored only when it differs from the folder found automatically, so a moved install is still found.
+            InstallFolder = SameFolder(installFolder, InstallLocator.Find(null)) ? null : installFolder,
         });
 
         var result = await Task.Run(() => HearthstoneSetup.Apply(installFolder)).ConfigureAwait(true);
         if (result == SetupResult.Done && _monitor.Process is not null)
         {
-            // A running Hearthstone read its settings at start; it writes the log only after a restart.
+            // A running Hearthstone read its settings at start; it writes the log only after a restart. This is not
+            // stored: after an app restart the next Hearthstone start makes it moot anyway.
             _restartNeeded = true;
         }
 
@@ -175,31 +194,61 @@ internal sealed class AppShell : IDisposable
         _tray.Dispose();
     }
 
+    /// <summary>How many polls in a row may fail before the tray says notifications may not work.</summary>
+    private const int PollFailureLimit = 3;
+
     private void Poll()
+    {
+        IReadOnlyList<TrackerOutput> outputs;
+        try
+        {
+            outputs = _monitor.Poll();
+            _pollFailures = 0;
+            _lastPollError = null;
+        }
+        catch (Exception e)
+        {
+            // A defect in detection must not end the app. It is logged when it changes, not every 250 ms, and
+            // repeated failures show as Not working (PRD FR15).
+            _pollFailures++;
+            var error = $"{e.GetType().FullName}: {e.Message}";
+            if (error != _lastPollError)
+            {
+                _lastPollError = error;
+                DiagnosticLog.Error("Read the game log", e);
+            }
+
+            outputs = [];
+        }
+
+        foreach (var output in outputs)
+        {
+            Handle(output);
+        }
+
+        UpdateTray();
+    }
+
+    private void Handle(TrackerOutput output)
     {
         try
         {
-            foreach (var output in _monitor.Poll())
+            switch (output)
             {
-                switch (output)
-                {
-                    case PhaseStarted started:
-                        _policy.OnPhaseStarted(started.Phase, Settings, _paused);
-                        break;
-                    case DetectionFailing failing:
-                        DiagnosticLog.Info($"Detection failing: {failing.Reason}.");
-                        ShowNotice("Toast.NotWorking.Title", FailureTextId(failing.Reason), onSelected: null);
-                        break;
-                }
+                case PhaseStarted started:
+                    _policy.OnPhaseStarted(started.Phase, Settings, _paused);
+                    break;
+                case DetectionFailing failing:
+                    DiagnosticLog.Info($"Detection failing: {failing.Reason}.");
+                    ShowNotice("Toast.NotWorking.Title", FailureTextId(failing.Reason), onSelected: null);
+                    break;
             }
         }
         catch (Exception e)
         {
-            // A defect in detection must not end the app; it is logged and the next poll tries again.
-            DiagnosticLog.Error("Read the game log", e);
+            // One failed notification must not drop the outputs after it.
+            DiagnosticLog.Error("Notify the player", e);
         }
-
-        UpdateTray();
     }
 
     private void OnHearthstoneStartedOrExited()
@@ -238,7 +287,7 @@ internal sealed class AppShell : IDisposable
             TrayStatusResolver.Resolve(new TrayConditions(
                 SetupNeeded: _setupNeeded,
                 RestartNeeded: _restartNeeded,
-                DetectionFailing: _tracker.IsFailing,
+                DetectionFailing: _tracker.IsFailing || _pollFailures >= PollFailureLimit,
                 Paused: _paused,
                 HearthstoneRunning: _monitor.Process is not null)),
             _paused,
@@ -260,7 +309,10 @@ internal sealed class AppShell : IDisposable
     {
         try
         {
-            _store.Save(Settings);
+            if (!_store.Save(Settings))
+            {
+                DiagnosticLog.Info("Settings not saved: the settings file was not read by this version.");
+            }
         }
         catch (Exception e) when (e is UnauthorizedAccessException or IOException)
         {
@@ -276,6 +328,9 @@ internal sealed class AppShell : IDisposable
             _dispatcher.BeginInvoke(_tray.Refresh);
         }
     }
+
+    internal static bool SameFolder(string a, string? b) =>
+        b is not null && string.Equals(Path.GetFullPath(a).TrimEnd(Path.DirectorySeparatorChar), Path.GetFullPath(b).TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase);
 
     internal static (string Title, string Body) PhaseText(Phase phase) =>
         (Strings.Get(phase == Phase.HeroSelection ? "Toast.HeroSelection.Title" : "Toast.Recruit.Title"), Strings.Get("Toast.Phase.Body"));

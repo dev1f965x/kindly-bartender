@@ -15,14 +15,20 @@ foreach ($line in Get-Content (Join-Path $root 'CONTENT.md') -Encoding utf8) {
         $inStrings = $line -eq '## Strings'
         continue
     }
-    if ($inStrings -and $line -match '^\| (?!ID |---)([^|]+)\|([^|]+)\|([^|]+)\|') {
-        $id = $Matches[1].Trim()
-        if ($english.Contains($id)) {
-            throw "Duplicate string ID in CONTENT.md: $id"
-        }
-        $english[$id] = $Matches[2].Trim()
-        $korean[$id] = $Matches[3].Trim()
+    if (-not $inStrings -or $line -notmatch '^\|' -or $line -match '^\| (ID |---)') {
+        continue
     }
+    # Exactly three non-empty cells. A pipe inside a string would split it silently, so such a row fails instead.
+    if ($line -notmatch '^\|([^|]+)\|([^|]+)\|([^|]+)\|\s*$' -or
+        -not ($Matches[1].Trim() -and $Matches[2].Trim() -and $Matches[3].Trim())) {
+        throw "Malformed string row in CONTENT.md: $line"
+    }
+    $id = $Matches[1].Trim()
+    if ($english.Contains($id)) {
+        throw "Duplicate string ID in CONTENT.md: $id"
+    }
+    $english[$id] = $Matches[2].Trim()
+    $korean[$id] = $Matches[3].Trim()
 }
 
 function ConvertTo-Resx([System.Collections.Specialized.OrderedDictionary]$strings) {

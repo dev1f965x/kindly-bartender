@@ -39,6 +39,9 @@ public partial class App : Application
         }
 
         DispatcherUnhandledException += OnUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            DiagnosticLog.Error("Unexpected error on a background thread", args.ExceptionObject as Exception ?? new InvalidOperationException(args.ExceptionObject?.ToString()));
+        TaskScheduler.UnobservedTaskException += (_, args) => DiagnosticLog.Error("Unobserved task error", args.Exception);
 
         // Before the tray icon exists, so it and the notifications carry the app ID.
         AppIdentity.Register("Kindly Bartender", iconPath: null);

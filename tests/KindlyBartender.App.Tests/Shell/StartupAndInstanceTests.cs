@@ -5,9 +5,24 @@ namespace KindlyBartender.App.Tests.Shell;
 [Collection("Strings")]
 public sealed class StartupAndInstanceTests : IDisposable
 {
-    private readonly string _keyPath = @"Software\KindlyBartenderTests\" + Guid.NewGuid().ToString("N");
+    private const string ParentKey = @"Software\KindlyBartenderTests";
 
-    public void Dispose() => Registry.CurrentUser.DeleteSubKeyTree(_keyPath, throwOnMissingSubKey: false);
+    private readonly string _keyPath = ParentKey + @"\" + Guid.NewGuid().ToString("N");
+
+    public void Dispose()
+    {
+        Registry.CurrentUser.DeleteSubKeyTree(_keyPath, throwOnMissingSubKey: false);
+        bool empty;
+        using (var parent = Registry.CurrentUser.OpenSubKey(ParentKey))
+        {
+            empty = parent is { SubKeyCount: 0, ValueCount: 0 };
+        }
+
+        if (empty)
+        {
+            Registry.CurrentUser.DeleteSubKey(ParentKey, throwOnMissingSubKey: false);
+        }
+    }
 
     [Fact]
     public void Startup_entry_quotes_the_path_and_starts_in_the_background()
