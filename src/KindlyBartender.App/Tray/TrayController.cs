@@ -33,12 +33,10 @@ internal sealed class TrayController : IDisposable
         _icon.Visible = true;
     }
 
-    public event Action? PauseToggled;
-
     public event Action? ExitRequested;
 
-    /// <summary>Creates the extra menu items, shown between the status and Pause. Called each time the menu opens.</summary>
-    public Func<IEnumerable<ToolStripItem>>? ExtraItems { get; set; }
+    /// <summary>Creates the menu items between the status and Exit. Called each time the menu opens.</summary>
+    public Func<IEnumerable<ToolStripItem>>? Items { get; set; }
 
     /// <summary>Shows the state. Cheap when nothing changed, so it can run on every poll.</summary>
     public void Show(TrayView view)
@@ -107,12 +105,11 @@ internal sealed class TrayController : IDisposable
         _menu.Items.Add(new ToolStripMenuItem(status) { Enabled = false });
         _menu.Items.Add(new ToolStripSeparator());
 
-        foreach (var item in ExtraItems?.Invoke() ?? [])
+        foreach (var item in Items?.Invoke() ?? [])
         {
             _menu.Items.Add(item);
         }
 
-        _menu.Items.Add(new ToolStripMenuItem(Strings.Get(view.Paused ? "Tray.Menu.Resume" : "Tray.Menu.Pause"), null, (_, _) => PauseToggled?.Invoke()));
         _menu.Items.Add(new ToolStripMenuItem(Strings.Get("Tray.Menu.Exit"), null, (_, _) => ExitRequested?.Invoke()));
     }
 }

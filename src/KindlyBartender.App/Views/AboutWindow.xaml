@@ -1,0 +1,40 @@
+<Window x:Class="KindlyBartender.App.Views.AboutWindow"
+        x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:KindlyBartender.App.Views"
+        Title="Kindly Bartender"
+        Width="{StaticResource WindowWidth}"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        FontSize="14">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel Margin="24,24,24,0">
+                <TextBlock x:Name="TitleText" Style="{StaticResource TitleText}" />
+                <TextBlock x:Name="VersionText" Style="{StaticResource BodyText}" Margin="0,12,0,0" />
+                <views:MessageCard x:Name="UpdateMessage" />
+
+                <TextBlock x:Name="UnofficialText" Style="{StaticResource BodyText}" Margin="0,12,0,0" />
+                <TextBlock x:Name="RiskText" Style="{StaticResource BodyText}" />
+
+                <TextBlock x:Name="FilesHeading" Style="{StaticResource HeadingText}" />
+                <TextBlock x:Name="FilesText" Style="{StaticResource BodyText}" />
+
+                <TextBlock x:Name="PrivacyHeading" Style="{StaticResource HeadingText}" />
+                <TextBlock x:Name="PrivacyText" Style="{StaticResource BodyText}" />
+
+                <WrapPanel x:Name="LinksPanel" Margin="0,12,0,0" />
+                <StackPanel x:Name="DiagnosticsPanel" Margin="0,12,0,0" />
+            </StackPanel>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1" Style="{StaticResource ButtonRow}">
+            <Button x:Name="CloseButton" Style="{StaticResource PrimaryRowButton}" IsCancel="True" IsDefault="True" Click="OnClose" />
+        </StackPanel>
+    </Grid>
+</Window>

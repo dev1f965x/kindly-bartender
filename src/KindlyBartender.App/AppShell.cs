@@ -69,13 +69,13 @@ internal sealed class AppShell : IDisposable
 
         _policy = new NotificationPolicy(new WindowsNotificationActions(_toasts, DiagnosticLog.Error), PhaseText);
 
-        _tray.PauseToggled += () =>
-        {
-            _paused = !_paused;
-            UpdateTray();
-        };
         _tray.ExitRequested += () => ExitRequested?.Invoke();
-        _doNotDisturb.Changed += _ => _dispatcher.BeginInvoke(UpdateTray);
+        _doNotDisturb.Changed += _ => _dispatcher.BeginInvoke(() =>
+        {
+            UpdateTray();
+            DoNotDisturbChanged?.Invoke();
+        });
+        _tray.Items = MenuItems;
         SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
         _timer = new DispatcherTimer(PollInterval, DispatcherPriority.Background, (_, _) => Poll(), dispatcher);
@@ -90,10 +90,19 @@ internal sealed class AppShell : IDisposable
 
     public bool SetupNeeded => _setupNeeded;
 
+    /// <summary>The log settings were written while Hearthstone was running.</summary>
+    public bool RestartNeeded => _restartNeeded;
+
+    /// <summary>Raised on the UI thread when Do not disturb turns on or off.</summary>
+    public event Action? DoNotDisturbChanged;
+
     /// <summary>The Hearthstone folder in use, or null when the player has to choose one.</summary>
     public string? InstallFolder { get; private set; }
 
     public TrayController Tray => _tray;
+
+    /// <summary>Supplies the update item for the tray menu, if any.</summary>
+    public Func<IEnumerable<System.Windows.Forms.ToolStripItem>>? UpdateMenuItems { get; set; }
 
     public bool MayHideNotifications => _doNotDisturb.MayHideNotifications;
 
@@ -185,6 +194,33 @@ internal sealed class AppShell : IDisposable
         CheckSetup(notify: false);
         return result;
     }
+
+
+    /// <summary>Tray menu items in wireframe order; the update item is added when a newer version is known.</summary>
+    private IEnumerable<System.Windows.Forms.ToolStripItem> MenuItems()
+    {
+        if (_setupNeeded)
+        {
+            yield return MenuItem("Tray.Menu.SetUp", () => WindowRequested?.Invoke(AppWindow.Setup));
+        }
+
+        yield return MenuItem("Tray.Menu.Settings", () => WindowRequested?.Invoke(AppWindow.Settings));
+        yield return MenuItem(_paused ? "Tray.Menu.Resume" : "Tray.Menu.Pause", () =>
+        {
+            _paused = !_paused;
+            UpdateTray();
+        });
+
+        foreach (var item in UpdateMenuItems?.Invoke() ?? [])
+        {
+            yield return item;
+        }
+
+        yield return MenuItem("Tray.Menu.About", () => WindowRequested?.Invoke(AppWindow.About));
+    }
+
+    private static System.Windows.Forms.ToolStripMenuItem MenuItem(string id, Action onClick) =>
+        new(Strings.Get(id), null, (_, _) => onClick());
 
     public void Dispose()
     {
