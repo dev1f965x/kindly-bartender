@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The same hand-written log lines the unit tests use. -->
+    <Compile Include="..\KindlyBartender.Core.Tests\PowerLog\LogLines.cs" Link="EndToEnd\LogLines.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\KindlyBartender.App\KindlyBartender.App.csproj" />
   </ItemGroup>
 

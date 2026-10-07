@@ -7,6 +7,9 @@ internal static class DiagnosticLog
 {
     private static readonly DiagnosticLogFile File = new(AppPaths.LogsFolder, () => DateTimeOffset.Now);
 
+    /// <summary>For services in Core, which take the log as a parameter.</summary>
+    public static IDiagnosticLog Instance => File;
+
     public static string Folder => File.Folder;
 
     public static void Write(LogEvent logEvent) => File.Write(logEvent);

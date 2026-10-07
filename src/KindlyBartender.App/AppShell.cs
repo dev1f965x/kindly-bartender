@@ -38,14 +38,12 @@ internal sealed class AppShell : IDisposable
     private readonly DoNotDisturbMonitor _doNotDisturb = new(DiagnosticLog.Error);
     private readonly GameTracker _tracker;
     private readonly LogMonitor _monitor;
-    private readonly NotificationPolicy _policy;
+    private readonly DetectionLoop _loop;
     private readonly DispatcherTimer _timer;
     private bool _setupNeeded;
     private bool _restartNeeded;
     private bool _paused;
     private Task<SetupResult>? _setup;
-    private int _pollFailures;
-    private string? _lastPollError;
 
     /// <param name="dispatcher">The UI thread.</param>
     /// <param name="dataFolder">Where settings.json lives; tests pass a temporary folder.</param>
@@ -81,7 +79,9 @@ internal sealed class AppShell : IDisposable
         _monitor.LinesSkipped += count => DiagnosticLog.Write(LogEvent.LinesSkipped, count);
         _monitor.Error += DiagnosticLog.Error;
 
-        _policy = new NotificationPolicy(new WindowsNotificationActions(_toasts, DiagnosticLog.Error), PhaseText);
+        var policy = new NotificationPolicy(new WindowsNotificationActions(_toasts, DiagnosticLog.Error), PhaseText);
+        _loop = new DetectionLoop(_monitor, _tracker, policy, DiagnosticLog.Instance);
+        _loop.Failing += reason => ShowNotice("Toast.NotWorking.Title", FailureTextId(reason), onSelected: null);
 
         _tray.ExitRequested += () => ExitRequested?.Invoke();
         _doNotDisturb.Changed += _ => _dispatcher.BeginInvoke(() =>
@@ -237,62 +237,10 @@ internal sealed class AppShell : IDisposable
         _tray.Dispose();
     }
 
-    /// <summary>How many polls in a row may fail before the tray says notifications may not work.</summary>
-    private const int PollFailureLimit = 3;
-
     private void Poll()
     {
-        IReadOnlyList<TrackerOutput> outputs;
-        try
-        {
-            outputs = _monitor.Poll();
-            _pollFailures = 0;
-            _lastPollError = null;
-        }
-        catch (Exception e)
-        {
-            // A defect in detection must not end the app. It is logged when it changes, not every 250 ms, and
-            // repeated failures show as Not working (PRD FR15).
-            _pollFailures++;
-            var error = $"{e.GetType().FullName}:{e.HResult}";
-            if (error != _lastPollError)
-            {
-                _lastPollError = error;
-                DiagnosticLog.Error(LogEvent.PollFailed, e);
-            }
-
-            outputs = [];
-        }
-
-        foreach (var output in outputs)
-        {
-            Handle(output);
-        }
-
+        _loop.Poll(Settings, _paused);
         UpdateTray();
-    }
-
-    private void Handle(TrackerOutput output)
-    {
-        try
-        {
-            switch (output)
-            {
-                case PhaseStarted started:
-                    DiagnosticLog.Write(LogEvent.PhaseStarted, started.Phase);
-                    _policy.OnPhaseStarted(started.Phase, Settings, _paused);
-                    break;
-                case DetectionFailing failing:
-                    DiagnosticLog.Write(LogEvent.DetectionFailing, failing.Reason);
-                    ShowNotice("Toast.NotWorking.Title", FailureTextId(failing.Reason), onSelected: null);
-                    break;
-            }
-        }
-        catch (Exception e)
-        {
-            // One failed notification must not drop the outputs after it.
-            DiagnosticLog.Error(LogEvent.NotifyFailed, e);
-        }
     }
 
     private void OnHearthstoneStartedOrExited() => CheckSetup(notify: true);
@@ -337,7 +285,7 @@ internal sealed class AppShell : IDisposable
             TrayStatusResolver.Resolve(new TrayConditions(
                 SetupNeeded: _setupNeeded,
                 RestartNeeded: _restartNeeded,
-                DetectionFailing: _tracker.IsFailing || _pollFailures >= PollFailureLimit,
+                DetectionFailing: _loop.IsFailing,
                 Paused: _paused,
                 HearthstoneRunning: _monitor.Process is not null)),
             _paused,

@@ -9,7 +9,7 @@ namespace KindlyBartender.Core.Diagnostics;
 /// text can reach the file. Safe to call from any thread; write failures are dropped, because the log is the
 /// place errors would be reported to.
 /// </summary>
-public sealed class DiagnosticLogFile(string folder, Func<DateTimeOffset> now)
+public sealed class DiagnosticLogFile(string folder, Func<DateTimeOffset> now) : IDiagnosticLog
 {
     public const int MaxFiles = 7;
     public const long MaxFileBytes = 1024 * 1024;
