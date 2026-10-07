@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KindlyBartender.App/KindlyBartender.App.csproj" />
+    <Project Path="src/KindlyBartender.Core/KindlyBartender.Core.csproj" />
+  </Folder>
+</Solution>

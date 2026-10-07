@@ -12,14 +12,8 @@
   "rangeStrategy": "bump",
   "packageRules": [
     {
-      "description": "Pin the Dev Container image by digest so a rebuild uses a reviewed image.",
-      "matchManagers": ["devcontainer"],
-      "matchDepTypes": ["image"],
-      "pinDigests": true
-    },
-    {
-      "description": "Merge low-risk dev dependency patches after CI passes; 0.x has no compatibility promise.",
-      "matchDepTypes": ["devDependencies"],
+      "description": "Test and build tools never ship in the app; merge their patches after CI passes. 0.x has no compatibility promise.",
+      "matchPackageNames": ["xunit.v3", "nuget-license"],
       "matchUpdateTypes": ["patch"],
       "matchCurrentVersion": "!/^v?0\\./",
       "automerge": true
