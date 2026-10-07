@@ -5,13 +5,13 @@ How Kindly Bartender looks. The app is a small Windows utility: it should look l
 ## Direction
 
 - Use the WPF Fluent theme (`ThemeMode="System"` on the application) and its controls without restyling them. Light and dark mode follow Windows.
-- Use the Windows accent color for the one primary button in a window and for nothing else.
+- Use the Windows accent color for the one primary button in a window (the theme's accent button style) and for nothing else.
 - No game imagery, Blizzard logos or colors, gradients, shadows beyond the theme's, decorative illustrations, or custom fonts.
-- Windows are small, fixed-width, and not resizable. Content flows top to bottom in one column.
+- Windows are small and fixed-width. Content flows top to bottom in one column and scrolls vertically (ScrollViewer) when it exceeds the window's maximum height; the button row stays visible.
 
 ## Tokens
 
-Colors come from the theme's resources (`TextFillColorPrimaryBrush`, `TextFillColorSecondaryBrush`, `CardBackgroundFillColorDefaultBrush`, `SystemFillColorCautionBrush`, `AccentFillColorDefaultBrush`). The app defines no colors of its own.
+Colors come from the Fluent theme's resources (`TextFillColorPrimaryBrush`, `TextFillColorSecondaryBrush`, `CardBackgroundFillColorDefaultBrush`, `SystemFillColorCautionBrush`, `AccentFillColorDefaultBrush`), always referenced with `DynamicResource` so that light, dark, and contrast themes switch while the app runs. The app defines no colors of its own. Resource keys are confirmed against the .NET 10 Fluent theme when the windows are built; a missing key is replaced by the nearest theme key and recorded here.
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -39,12 +39,13 @@ Sizes are in device-independent pixels and scale with the Windows text size sett
 ## Tray icon
 
 - An original glyph: a mug outline with a small dot, drawn in a single color that follows the taskbar's light or dark theme. No game artwork.
-- States are shown by a small overlay mark, not by color alone: none for Ready, a pause mark for Paused, an exclamation mark in a circle for Setup needed, Restart needed, and Not working, and a hollow glyph for Waiting for Hearthstone. The tooltip always gives the status text.
+- States are shown by a small overlay mark, not by color alone: none for Ready, a pause mark for Paused, an exclamation mark in a circle for Setup needed, Restart needed, and Not working, and a dimmed glyph with a small clock mark for Waiting for Hearthstone. The tooltip always gives the status text.
 
 ## Accessibility
 
 - Every control has an accessible name from its visible label. Status changes in a window are announced with a live region.
 - The tab order follows the visual order. Escape closes a window; Enter activates the primary button.
+- Focus stays visible: the theme's focus visual is kept and `FocusVisualStyle` is never set to null.
 - Text meets 4.5:1 contrast through the theme; the app adds no low-contrast text.
 - Windows work at 200% text size without clipping, and with Windows contrast themes.
 

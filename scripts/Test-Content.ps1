@@ -51,6 +51,11 @@ $problems = foreach ($string in Get-Strings) {
             "$($string.Source): '$phrase'"
         }
     }
+    # Korean sentences use 합니다체; a sentence ending in 요 is 해요체, except the -세요 request form the guide
+    # allows and the noun 필요.
+    if ($text -match '(?<![세필])요[.?]?(\s|$)') {
+        "$($string.Source): 해요체 ending; use 합니다체"
+    }
 }
 
 if ($problems) {
