@@ -14,6 +14,9 @@ public enum SetupResult
     /// <summary>The player cancelled the Windows administrator prompt.</summary>
     ElevationCancelled,
 
+    /// <summary>A file is read-only or in an encoding that cannot be kept; administrator rights would not help.</summary>
+    FileNotEditable,
+
     /// <summary>A file could not be written; the setup window says so and setup stays needed.</summary>
     Failed,
 }
@@ -40,7 +43,7 @@ internal static class HearthstoneSetup
         var logConfig = ConfigFileWriter.Ensure(AppPaths.LogConfig, HearthstoneConfig.LogConfig, AppPaths.BackupFolder);
         if (logConfig is not (ConfigWriteOutcome.Written or ConfigWriteOutcome.Unchanged))
         {
-            return SetupResult.Failed;
+            return logConfig == ConfigWriteOutcome.Refused ? SetupResult.FileNotEditable : SetupResult.Failed;
         }
 
         var clientConfigPath = HearthstoneConfig.ClientConfigPath(installFolder);
@@ -49,6 +52,7 @@ internal static class HearthstoneSetup
         {
             ConfigWriteOutcome.Written or ConfigWriteOutcome.Unchanged => SetupResult.Done,
             ConfigWriteOutcome.AccessDenied => WriteClientConfigElevated(installFolder),
+            ConfigWriteOutcome.Refused => SetupResult.FileNotEditable,
             _ => SetupResult.Failed,
         };
     }

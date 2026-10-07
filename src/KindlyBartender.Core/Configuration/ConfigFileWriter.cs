@@ -88,12 +88,13 @@ public static class ConfigFileWriter
 
             var folder = Path.GetDirectoryName(path)!;
             Directory.CreateDirectory(folder);
-            temporary = Path.Combine(folder, $"{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+            var candidate = Path.Combine(folder, $"{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
             var encoding = original?.Encoding ?? StrictUtf8;
 
             // CreateNew fails if anything, including a link, already exists at the name.
-            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            using (var stream = new FileStream(candidate, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
+                temporary = candidate;
                 stream.Write(original?.Preamble ?? []);
                 stream.Write(encoding.GetBytes(updated));
                 stream.Flush(flushToDisk: true);
