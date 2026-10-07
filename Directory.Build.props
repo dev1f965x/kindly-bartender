@@ -14,7 +14,8 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <!-- GitHub Actions sets CI=true; restores there must match the committed lock files. -->
     <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
-    <!-- Audit direct and transitive packages; with TreatWarningsAsErrors, high and critical advisories fail the build. -->
+    <!-- Audit direct and transitive packages; with TreatWarningsAsErrors, high and critical advisories fail the build.
+         An unreachable audit source (NU1900) fails it too, which is deliberate: no silent pass. -->
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>high</NuGetAuditLevel>

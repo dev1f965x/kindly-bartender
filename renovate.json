@@ -12,8 +12,13 @@
   "rangeStrategy": "bump",
   "packageRules": [
     {
+      "description": "The test framework and the test platform it runs on move together.",
+      "matchPackageNames": ["xunit.v3*", "Microsoft.Testing.*"],
+      "groupName": "test tools"
+    },
+    {
       "description": "Test and build tools never ship in the app; merge their patches after CI passes. 0.x has no compatibility promise.",
-      "matchPackageNames": ["xunit.v3", "nuget-license"],
+      "matchPackageNames": ["xunit.v3*", "Microsoft.Testing.*", "nuget-license"],
       "matchUpdateTypes": ["patch"],
       "matchCurrentVersion": "!/^v?0\\./",
       "automerge": true

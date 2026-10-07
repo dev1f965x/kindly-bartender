@@ -45,3 +45,7 @@ dotnet_naming_style.underscore_camel.required_prefix = _
 
 [*.{csproj,props,targets,slnx}]
 indent_size = 2
+
+[packages.lock.json]
+# NuGet writes lock files without a final newline.
+insert_final_newline = false
