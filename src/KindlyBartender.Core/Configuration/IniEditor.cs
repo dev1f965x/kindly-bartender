@@ -11,16 +11,20 @@ public sealed record IniRequirement(string Section, string Key, string Value, Fu
 
 /// <summary>
 /// Checks and edits INI-style files such as Hearthstone's log.config and client.config. Only the required keys
-/// change; every other line, comment, and the order are kept, and the file's line endings are reused.
+/// change; every other line, comment, the order, and each line's own line ending are kept.
 /// </summary>
 public static class IniEditor
 {
     /// <summary>Returns the requirements that the text does not meet. Null text means the file does not exist.</summary>
     public static IReadOnlyList<IniRequirement> FindUnmet(string? text, IEnumerable<IniRequirement> requirements)
     {
-        var values = ReadValues(text ?? string.Empty);
+        var lines = Split(text ?? string.Empty);
         return requirements
-            .Where(r => !values.TryGetValue((r.Section, r.Key), out var found) || found.Any(v => !r.IsSatisfiedBy(v)))
+            .Where(r =>
+            {
+                var values = ValuesOf(lines, r).ToList();
+                return values.Count == 0 || values.Any(v => !r.IsSatisfiedBy(v));
+            })
             .ToList();
     }
 
@@ -33,128 +37,146 @@ public static class IniEditor
             return text ?? string.Empty;
         }
 
-        var source = text ?? string.Empty;
-        var newline = source.Contains("\r\n", StringComparison.Ordinal) || source.Length == 0 ? "\r\n" : "\n";
-        var lines = source.Length == 0 ? [] : source.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n').ToList();
-        var endsWithNewline = lines.Count > 0 && lines[^1].Length == 0;
-        if (endsWithNewline)
-        {
-            lines.RemoveAt(lines.Count - 1);
-        }
-
+        var lines = Split(text ?? string.Empty);
         foreach (var requirement in unmet)
         {
             SetValue(lines, requirement);
         }
 
-        return string.Join(newline, lines) + newline;
+        return string.Concat(lines.Select(l => l.Text + l.Ending));
     }
 
-    private static void SetValue(List<string> lines, IniRequirement requirement)
+    private static void SetValue(List<Line> lines, IniRequirement requirement)
     {
-        var section = string.Empty;
-        var sectionEnd = -1;
         var replaced = false;
+        var lastSectionEnd = -1;
+        var section = string.Empty;
 
         for (var i = 0; i < lines.Count; i++)
         {
-            if (TryReadSection(lines[i], out var name))
+            if (TryReadSection(lines[i].Text, out var name))
             {
                 if (SameName(section, requirement.Section))
                 {
-                    sectionEnd = i;
+                    lastSectionEnd = i;
                 }
 
                 section = name;
                 continue;
             }
 
-            if (SameName(section, requirement.Section)
-                && TryReadEntry(lines[i], out var key, out var value)
-                && SameName(key, requirement.Key)
-                && !requirement.IsSatisfiedBy(value))
+            if (SameName(section, requirement.Section) && TryReadEntry(lines[i].Text, out var key, out var value) && SameName(key, requirement.Key))
             {
-                lines[i] = $"{requirement.Key}={requirement.Value}";
+                if (!requirement.IsSatisfiedBy(value))
+                {
+                    lines[i] = lines[i] with { Text = Entry(requirement) };
+                }
+
                 replaced = true;
             }
         }
 
-        if (replaced || HasKey(lines, requirement))
+        if (SameName(section, requirement.Section))
+        {
+            lastSectionEnd = lines.Count;
+        }
+
+        if (replaced)
         {
             return;
         }
 
-        var sectionFound = sectionEnd >= 0 || SameName(section, requirement.Section);
-        if (!sectionFound)
+        if (lastSectionEnd < 0)
         {
-            if (lines.Count > 0 && lines[^1].Trim().Length > 0)
+            if (lines.Count > 0 && lines[^1].Text.Trim().Length > 0)
             {
-                lines.Add(string.Empty);
+                Insert(lines, lines.Count, string.Empty);
             }
 
-            lines.Add($"[{requirement.Section}]");
-            lines.Add($"{requirement.Key}={requirement.Value}");
+            Insert(lines, lines.Count, $"[{requirement.Section}]");
+            Insert(lines, lines.Count, Entry(requirement));
             return;
         }
 
         // Insert after the last non-blank line of the section, so blank separator lines stay where they were.
-        var insertAt = sectionEnd >= 0 ? sectionEnd : lines.Count;
-        while (insertAt > 0 && lines[insertAt - 1].Trim().Length == 0)
+        var insertAt = lastSectionEnd;
+        while (insertAt > 0 && lines[insertAt - 1].Text.Trim().Length == 0)
         {
             insertAt--;
         }
 
-        lines.Insert(insertAt, $"{requirement.Key}={requirement.Value}");
+        Insert(lines, insertAt, Entry(requirement));
     }
 
-    private static bool HasKey(List<string> lines, IniRequirement requirement)
+    /// <summary>Inserts a line, taking its line ending from a neighbour so the file keeps its style.</summary>
+    private static void Insert(List<Line> lines, int index, string text)
+    {
+        var neighbour = lines.Count == 0 ? null : lines[Math.Min(Math.Max(index - 1, 0), lines.Count - 1)];
+        var ending = neighbour?.Ending is { Length: > 0 } e ? e : DefaultEnding(lines);
+
+        if (index == lines.Count && lines.Count > 0 && lines[^1].Ending.Length == 0)
+        {
+            // The file had no final line break: give the old last line one and keep the new last line without.
+            lines[^1] = lines[^1] with { Ending = ending };
+            lines.Add(new Line(text, string.Empty));
+            return;
+        }
+
+        lines.Insert(index, new Line(text, ending));
+    }
+
+    private static string DefaultEnding(List<Line> lines) =>
+        lines.FirstOrDefault(l => l.Ending.Length > 0)?.Ending ?? "\r\n";
+
+    private static string Entry(IniRequirement requirement) => $"{requirement.Key}={requirement.Value}";
+
+    private static IEnumerable<string> ValuesOf(List<Line> lines, IniRequirement requirement)
     {
         var section = string.Empty;
         foreach (var line in lines)
         {
-            if (TryReadSection(line, out var name))
+            if (TryReadSection(line.Text, out var name))
             {
                 section = name;
             }
-            else if (SameName(section, requirement.Section) && TryReadEntry(line, out var key, out _) && SameName(key, requirement.Key))
+            else if (SameName(section, requirement.Section) && TryReadEntry(line.Text, out var key, out var value) && SameName(key, requirement.Key))
             {
-                return true;
+                yield return value;
             }
         }
-
-        return false;
     }
 
-    private static Dictionary<(string Section, string Key), List<string>> ReadValues(string text)
+    /// <summary>Splits text into lines, each with its own line ending ("\r\n", "\n", or none for the last line).</summary>
+    private static List<Line> Split(string text)
     {
-        var values = new Dictionary<(string, string), List<string>>(new NameComparer());
-        var section = string.Empty;
-        foreach (var line in text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'))
+        var lines = new List<Line>();
+        var start = 0;
+        while (start < text.Length)
         {
-            if (TryReadSection(line, out var name))
+            var newline = text.IndexOf('\n', start);
+            if (newline < 0)
             {
-                section = name;
+                lines.Add(new Line(text[start..], string.Empty));
+                break;
             }
-            else if (TryReadEntry(line, out var key, out var value))
-            {
-                if (!values.TryGetValue((section, key), out var list))
-                {
-                    values[(section, key)] = list = [];
-                }
 
-                list.Add(value);
-            }
+            var hasCarriageReturn = newline > start && text[newline - 1] == '\r';
+            var end = hasCarriageReturn ? newline - 1 : newline;
+            lines.Add(new Line(text[start..end], hasCarriageReturn ? "\r\n" : "\n"));
+            start = newline + 1;
         }
 
-        return values;
+        return lines;
     }
 
     private static bool TryReadSection(string line, out string name)
     {
         var trimmed = line.Trim();
-        if (trimmed.Length >= 2 && trimmed[0] == '[' && trimmed[^1] == ']')
+        var close = trimmed.IndexOf(']', StringComparison.Ordinal);
+        // A comment may follow the closing bracket: "[Power] ; note".
+        if (trimmed.StartsWith('[') && close > 0 && trimmed[(close + 1)..].Trim() is var rest && (rest.Length == 0 || rest[0] is ';' or '#'))
         {
-            name = trimmed[1..^1].Trim();
+            name = trimmed[1..close].Trim();
             return true;
         }
 
@@ -166,7 +188,7 @@ public static class IniEditor
     {
         var trimmed = line.Trim();
         var equals = trimmed.IndexOf('=', StringComparison.Ordinal);
-        if (trimmed.Length == 0 || trimmed[0] is ';' or '#' || equals <= 0)
+        if (trimmed.Length == 0 || trimmed[0] is ';' or '#' or '[' || equals <= 0)
         {
             key = value = string.Empty;
             return false;
@@ -179,11 +201,5 @@ public static class IniEditor
 
     private static bool SameName(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
 
-    private sealed class NameComparer : IEqualityComparer<(string, string)>
-    {
-        public bool Equals((string, string) x, (string, string) y) => SameName(x.Item1, y.Item1) && SameName(x.Item2, y.Item2);
-
-        public int GetHashCode((string, string) obj) =>
-            HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Item1), StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Item2));
-    }
+    private sealed record Line(string Text, string Ending);
 }

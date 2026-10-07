@@ -10,9 +10,11 @@ public partial class App : Application
         base.OnStartup(e);
 
         // The elevated copy started by HearthstoneSetup does one write and exits, before any other startup work.
-        if (e.Args is [HearthstoneSetup.WriteClientConfigSwitch, var installFolder])
+        // Any other arguments after the switch are rejected rather than starting the whole app with admin rights.
+        if (e.Args is [HearthstoneSetup.WriteClientConfigSwitch, ..])
         {
-            Shutdown(HearthstoneSetup.RunElevatedWrite(installFolder));
+            Shutdown(e.Args is [_, var installFolder] ? HearthstoneSetup.RunElevatedWrite(installFolder) : 1);
+            return;
         }
     }
 }

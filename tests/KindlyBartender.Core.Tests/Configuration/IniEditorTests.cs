@@ -53,7 +53,29 @@ public class IniEditorTests
     public void Line_endings_of_the_file_are_reused()
     {
         Assert.Equal("[Power]\r\nLogLevel=1\r\nFilePrinting=true\r\nVerbose=true\r\n", IniEditor.Apply("[Power]\r\nLogLevel=1\r\n", LogConfig));
-        Assert.Equal("[Power]\nLogLevel=1\nFilePrinting=true\nVerbose=true\n", IniEditor.Apply("[Power]\nLogLevel=1", LogConfig));
+        Assert.Equal("[Power]\nLogLevel=1\nFilePrinting=true\nVerbose=true", IniEditor.Apply("[Power]\nLogLevel=1", LogConfig));
+    }
+
+    [Fact]
+    public void Mixed_line_endings_are_kept_line_by_line()
+    {
+        const string text = "[Power]\r\nLogLevel=1\nFilePrinting=true\r\n";
+
+        Assert.Equal("[Power]\r\nLogLevel=1\nFilePrinting=true\r\nVerbose=true\r\n", IniEditor.Apply(text, LogConfig));
+    }
+
+    [Fact]
+    public void Section_header_with_a_comment_is_recognized()
+    {
+        Assert.Empty(IniEditor.FindUnmet("[Log] ; added by a tool\nFileSizeLimit.Int=-1\n", HearthstoneConfig.ClientConfig));
+    }
+
+    [Fact]
+    public void Missing_key_goes_into_the_last_occurrence_of_a_repeated_section()
+    {
+        const string text = "[Power]\nLogLevel=1\n[Zone]\nA=1\n[Power]\nVerbose=true\n";
+
+        Assert.Equal("[Power]\nLogLevel=1\n[Zone]\nA=1\n[Power]\nVerbose=true\nFilePrinting=true\n", IniEditor.Apply(text, LogConfig));
     }
 
     [Fact]

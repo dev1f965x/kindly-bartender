@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using KindlyBartender.App.Hearthstone;
 using KindlyBartender.Core.Configuration;
 
@@ -32,6 +33,7 @@ internal static class HearthstoneSetup
     /// <summary>
     /// Writes the missing settings. Call only after the player agreed. client.config is written with the player's
     /// rights first; only if that is denied does a second copy of the app ask Windows for administrator rights.
+    /// Blocks until that copy exits, so call it off the UI thread.
     /// </summary>
     public static SetupResult Apply(string installFolder)
     {
@@ -52,19 +54,40 @@ internal static class HearthstoneSetup
     }
 
     /// <summary>
-    /// Runs in the elevated copy. Accepts the folder only if it holds Hearthstone.exe and writes nothing but
-    /// client.config in it. The backup was made by the caller, which runs as the player.
+    /// Runs in the elevated copy, which crosses a privilege boundary, so the folder from the command line is
+    /// trusted only if it is a fully qualified local path, holds Hearthstone.exe, and has no symbolic link or
+    /// junction anywhere on its path. Nothing but client.config is written. The backup was made by the caller,
+    /// which runs as the player.
     /// </summary>
     /// <returns>0 when written or already set, 1 when the folder is rejected, 2 when the write failed.</returns>
     public static int RunElevatedWrite(string installFolder)
     {
-        if (!InstallLocator.IsInstallFolder(installFolder))
+        if (!IsTrustedFolder(installFolder))
         {
             return 1;
         }
 
         var outcome = ConfigFileWriter.Ensure(HearthstoneConfig.ClientConfigPath(installFolder), HearthstoneConfig.ClientConfig, backupFolder: null);
         return outcome is ConfigWriteOutcome.Written or ConfigWriteOutcome.Unchanged ? 0 : 2;
+    }
+
+    internal static bool IsTrustedFolder(string folder)
+    {
+        // The elevated process starts in System32, so a relative path would resolve there; UNC paths are not ours to change.
+        if (!Path.IsPathFullyQualified(folder) || folder.StartsWith(@"\\", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        try
+        {
+            return InstallLocator.IsInstallFolder(folder)
+                && !ConfigFileWriter.HasReparsePointOnPath(HearthstoneConfig.ClientConfigPath(folder));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     private static SetupResult WriteClientConfigElevated(string installFolder)
