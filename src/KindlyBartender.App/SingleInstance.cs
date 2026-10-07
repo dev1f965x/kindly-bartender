@@ -1,6 +1,7 @@
 using System.IO;
 using System.IO.Pipes;
 using System.Security.Principal;
+using KindlyBartender.Core.Diagnostics;
 
 namespace KindlyBartender.App;
 
@@ -47,7 +48,7 @@ internal sealed class SingleInstance : IDisposable
     }
 
     /// <summary>Listens for later copies; <paramref name="onShow"/> runs on a background thread.</summary>
-    public void Listen(Action onShow, Action<string, Exception> onError) =>
+    public void Listen(Action onShow, Action<LogEvent, Exception> onError) =>
         _listener = Task.Run(async () =>
         {
             while (!_stop.IsCancellationRequested)
@@ -74,7 +75,7 @@ internal sealed class SingleInstance : IDisposable
                 catch (Exception e)
                 {
                     // Anything else is logged and the listener keeps going, so a later copy can still reach it.
-                    onError("Listen for another copy of the app", e);
+                    onError(LogEvent.ListenForOtherCopyFailed, e);
                     // Avoid a tight loop if the pipe keeps failing.
                     await Task.Delay(TimeSpan.FromSeconds(5), _stop.Token).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
                 }

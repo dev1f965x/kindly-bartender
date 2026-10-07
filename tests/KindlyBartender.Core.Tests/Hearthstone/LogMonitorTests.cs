@@ -1,5 +1,6 @@
 using System.Text;
 using KindlyBartender.Core.Detection;
+using KindlyBartender.Core.Diagnostics;
 using KindlyBartender.Core.Hearthstone;
 using KindlyBartender.Core.Tests.PowerLog;
 
@@ -193,7 +194,7 @@ public sealed class LogMonitorTests : IDisposable
     [Fact]
     public void Missing_install_or_Logs_folder_is_not_an_error()
     {
-        var errors = new List<string>();
+        var errors = new List<LogEvent>();
         var monitor = new LogMonitor(_probe, () => null, _tracker, _clock);
         monitor.Error += (what, _) => errors.Add(what);
         _probe.Running = new HearthstoneProcess(1, ProcessStart);
@@ -225,7 +226,7 @@ public sealed class LogMonitorTests : IDisposable
     {
         var log = SessionLog();
         Append(log, []);
-        var errors = new List<string>();
+        var errors = new List<LogEvent>();
         _monitor.Error += (what, _) => errors.Add(what);
         _probe.Running = new HearthstoneProcess(1, ProcessStart);
         Poll();

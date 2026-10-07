@@ -1,4 +1,5 @@
 using KindlyBartender.Core.Detection;
+using KindlyBartender.Core.Diagnostics;
 using KindlyBartender.Core.PowerLog;
 
 namespace KindlyBartender.Core.Hearthstone;
@@ -51,7 +52,7 @@ public sealed class LogMonitor(
     public event Action<int>? LinesSkipped;
 
     /// <summary>Raised with what failed and the error, for the diagnostic log. Repeated read errors are reported once.</summary>
-    public event Action<string, Exception>? Error;
+    public event Action<LogEvent, Exception>? Error;
 
     public HearthstoneProcess? Process => _process;
 
@@ -131,7 +132,7 @@ public sealed class LogMonitor(
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            Error?.Invoke("Find the log folder", e);
+            Error?.Invoke(LogEvent.FindLogFolderFailed, e);
             return null;
         }
     }
@@ -163,7 +164,7 @@ public sealed class LogMonitor(
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            Error?.Invoke("Find the last game in Power.log", e);
+            Error?.Invoke(LogEvent.FindLastGameFailed, e);
             _tailer = null;
             return;
         }
@@ -208,7 +209,7 @@ public sealed class LogMonitor(
                 // Hearthstone may hold the file briefly; the next poll continues where this one stopped.
                 if (!_readErrorReported && tailer.LastError is { } error)
                 {
-                    Error?.Invoke("Read Power.log", error);
+                    Error?.Invoke(LogEvent.ReadPowerLogFailed, error);
                     _readErrorReported = true;
                 }
 

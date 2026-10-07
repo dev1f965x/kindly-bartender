@@ -1,13 +1,20 @@
-using System.Diagnostics;
+using KindlyBartender.Core.Diagnostics;
 
 namespace KindlyBartender.App;
 
-/// <summary>Where the app records what went wrong, for the player to attach to a problem report (PRD FR27).</summary>
+/// <summary>The app's diagnostic log in the data folder, for the player to attach to a problem report (PRD FR27).</summary>
 internal static class DiagnosticLog
 {
-    public static void Error(string what, Exception error) =>
-        Trace.WriteLine($"{DateTimeOffset.Now:O} ERROR {what}: {error.GetType().Name} 0x{error.HResult:X8} {error.Message}");
+    private static readonly DiagnosticLogFile File = new(AppPaths.LogsFolder, () => DateTimeOffset.Now);
 
-    public static void Info(string message) =>
-        Trace.WriteLine($"{DateTimeOffset.Now:O} INFO {message}");
+    public static string Folder => File.Folder;
+
+    public static void Write(LogEvent logEvent) => File.Write(logEvent);
+
+    public static void Write(LogEvent logEvent, long value) => File.Write(logEvent, value);
+
+    public static void Write<TValue>(LogEvent logEvent, TValue value)
+        where TValue : struct, Enum => File.Write(logEvent, value);
+
+    public static void Error(LogEvent logEvent, Exception error) => File.Write(logEvent, error);
 }

@@ -1,4 +1,5 @@
 using KindlyBartender.App.Windows;
+using KindlyBartender.Core.Diagnostics;
 using Windows.UI.Notifications;
 
 namespace KindlyBartender.App.Tests.Windows;
@@ -17,7 +18,7 @@ public class DoNotDisturbMonitorTests
     [Fact]
     public void Reads_the_current_mode_without_errors()
     {
-        var errors = new List<string>();
+        var errors = new List<LogEvent>();
         using var monitor = new DoNotDisturbMonitor((what, _) => errors.Add(what));
 
         _ = monitor.MayHideNotifications;

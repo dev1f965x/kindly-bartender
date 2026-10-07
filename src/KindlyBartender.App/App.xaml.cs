@@ -2,8 +2,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Threading;
 using KindlyBartender.App.Configuration;
+using KindlyBartender.App.Updates;
 using KindlyBartender.App.Views;
 using KindlyBartender.App.Windows;
+using KindlyBartender.Core.Diagnostics;
 
 namespace KindlyBartender.App;
 
@@ -32,17 +34,18 @@ public partial class App : Application
         {
             if (!_instance.SignalFirst())
             {
-                DiagnosticLog.Info("Another copy is running but did not answer.");
+                DiagnosticLog.Write(LogEvent.AnotherCopyDidNotAnswer);
             }
 
             Shutdown(0);
             return;
         }
 
+        DiagnosticLog.Write(LogEvent.AppStarted);
         DispatcherUnhandledException += OnUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
-            DiagnosticLog.Error("Unexpected error on a background thread", args.ExceptionObject as Exception ?? new InvalidOperationException(args.ExceptionObject?.ToString()));
-        TaskScheduler.UnobservedTaskException += (_, args) => DiagnosticLog.Error("Unobserved task error", args.Exception);
+            DiagnosticLog.Error(LogEvent.BackgroundThreadError, args.ExceptionObject as Exception ?? new InvalidOperationException());
+        TaskScheduler.UnobservedTaskException += (_, args) => DiagnosticLog.Error(LogEvent.UnobservedTaskError, args.Exception);
 
         // Before the tray icon exists, so it and the notifications carry the app ID.
         AppIdentity.Register("Kindly Bartender", iconPath: null);
@@ -54,10 +57,30 @@ public partial class App : Application
         _shell.ExitRequested += Shutdown;
         _instance.Listen(() => Dispatcher.BeginInvoke(_shell.ShowFromAnotherCopy), DiagnosticLog.Error);
         _shell.Start(background: e.Args.Contains(StartupEntry.BackgroundSwitch));
+        _ = ShowUpdateIfAvailableAsync(_shell, windows);
+    }
+
+    /// <summary>Adds the download item to the tray menu and a notice to About when a newer release exists.</summary>
+    private static async Task ShowUpdateIfAvailableAsync(AppShell shell, WindowHost windows)
+    {
+        var version = typeof(App).Assembly.GetName().Version ?? new Version(0, 0, 0);
+        if (await UpdateChecker.CheckAsync(version).ConfigureAwait(true) is not { } update)
+        {
+            return;
+        }
+
+        void OpenPage() => Links.Open(update.PageUrl.AbsoluteUri);
+        shell.UpdateMenuItems = () => [new System.Windows.Forms.ToolStripMenuItem(Strings.Format("Tray.Menu.Update", update.Version), null, (_, _) => OpenPage())];
+        windows.AboutOpened += about => about.ShowUpdate(update.Version, OpenPage);
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        if (_shell is not null)
+        {
+            DiagnosticLog.Write(LogEvent.AppExiting);
+        }
+
         _shell?.Dispose();
         _instance?.Dispose();
         base.OnExit(e);
@@ -65,5 +88,5 @@ public partial class App : Application
 
     // Logged so the player can report it; the app still ends, because its state is unknown.
     private static void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e) =>
-        DiagnosticLog.Error("Unexpected error", e.Exception);
+        DiagnosticLog.Error(LogEvent.UnexpectedError, e.Exception);
 }
