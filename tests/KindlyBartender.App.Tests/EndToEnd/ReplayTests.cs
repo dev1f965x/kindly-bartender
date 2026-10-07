@@ -11,9 +11,14 @@ namespace KindlyBartender.App.Tests.EndToEnd;
 
 /// <summary>
 /// The app's detection services, from the log folder to the notification actions, run against a temporary
-/// Hearthstone folder while a synthetic game is written to Power.log on a game-like schedule. Only Windows is
-/// faked: the process, the clock, and the actions.
+/// Hearthstone folder while synthetic games are written to Power.log on a game-like schedule. Only Windows is
+/// faked: the process, the clock, and the actions. The notification text comes from the shell, in English.
 /// </summary>
+/// <remarks>
+/// The tray shell's own wiring (timer, tray, windows) is not part of this test; smoke runs and acceptance testing
+/// cover it.
+/// </remarks>
+[Collection("Strings")]
 public sealed class ReplayTests : IDisposable
 {
     private static readonly DateTime ProcessStart = new(2026, 10, 7, 20, 0, 5);
@@ -24,15 +29,21 @@ public sealed class ReplayTests : IDisposable
     private readonly FakeActions _actions;
     private readonly FakeProbe _probe = new();
     private readonly DetectionLoop _loop;
+    private readonly List<DetectionFailure> _failures = [];
     private readonly string _log;
 
     public ReplayTests()
     {
+        Strings.UseLanguage("en");
         _actions = new FakeActions(_clock);
         var tracker = new GameTracker(_clock);
         var monitor = new LogMonitor(_probe, () => _install, tracker, _clock);
-        var policy = new NotificationPolicy(_actions, phase => (phase.ToString(), "body"));
-        _loop = new DetectionLoop(monitor, tracker, policy, new NullLog());
+        // A file problem would otherwise show only as a missing notification; fail with its cause instead.
+        monitor.Error += (what, error) => Assert.Fail($"{what}: {error}");
+        monitor.LinesSkipped += count => Assert.Fail($"{count} lines skipped");
+        var policy = new NotificationPolicy(_actions, AppShell.PhaseText);
+        _loop = new DetectionLoop(monitor, tracker, policy, new FailingLog());
+        _loop.Failing += _failures.Add;
 
         var session = Path.Combine(_install, "Logs", "Hearthstone_2026_10_07_20_00_05");
         Directory.CreateDirectory(session);
@@ -40,85 +51,124 @@ public sealed class ReplayTests : IDisposable
         _log = Path.Combine(session, "Power.log");
     }
 
-    public void Dispose() => Directory.Delete(_install, recursive: true);
+    private static string HeroSelection => AppShell.PhaseText(Phase.HeroSelection).Title;
 
-    /// <summary>A game in seconds from its start: hero selection, three Recruit phases, and lines after the end.</summary>
-    private static IEnumerable<(double At, string[] Lines)> Game() =>
+    private static string Recruit => AppShell.PhaseText(Phase.Recruit).Title;
+
+    public void Dispose()
+    {
+        try
+        {
+            Directory.Delete(_install, recursive: true);
+        }
+        catch (IOException)
+        {
+            // A virus scanner may still hold the file; the folder is in the temp folder and holds nothing personal.
+        }
+    }
+
+    /// <summary>A game in seconds from <paramref name="start"/>: hero selection, three Recruit phases, then the end.</summary>
+    private static IEnumerable<(double At, string[] Lines)> Game(double start = 0) =>
     [
-        (0, [.. LogLines.BattlegroundsGameStart()]),
-        (3, [LogLines.GameTagChange("STEP", "BEGIN_MULLIGAN")]),
-        (6, [LogLines.TaskList("    TAG_CHANGE Entity=[entityName=BaconPHhero id=33 zone=PLAY zonePos=0 cardId= player=5] tag=ZONE value=HAND ")]),
-        (44, [LogLines.GameTagChange("TURN", "1"), LogLines.GameTagChange("STEP", "MAIN_READY")]),
-        (98, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "2")]),
-        (126, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "1")]),
-        (183, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "2")]),
-        (214, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "1")]),
-        (270, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "2")]),
-        (291, [LogLines.GameTagChange("STATE", "COMPLETE")]),
-        (296, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "1")]),
-        (300, [LogLines.GameTagChange("STEP", "MAIN_READY")]),
+        (start, [.. LogLines.BattlegroundsGameStart()]),
+        (start + 3, [LogLines.GameTagChange("STEP", "BEGIN_MULLIGAN")]),
+        (start + 6, [LogLines.TaskList("    TAG_CHANGE Entity=[entityName=BaconPHhero id=33 zone=PLAY zonePos=0 cardId= player=5] tag=ZONE value=HAND ")]),
+        (start + 44, [LogLines.GameTagChange("TURN", "1"), LogLines.GameTagChange("STEP", "MAIN_READY")]),
+        (start + 98, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "2")]),
+        (start + 126, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "1")]),
+        (start + 183, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "2")]),
+        (start + 214, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "1")]),
+        (start + 270, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "2")]),
+        (start + 291, [LogLines.GameTagChange("STATE", "COMPLETE")]),
+        (start + 296, [LogLines.GameTagChange("BOARD_VISUAL_STATE", "1")]),
+        (start + 300, [LogLines.GameTagChange("STEP", "MAIN_READY")]),
     ];
 
     [Fact]
     public void A_game_notifies_hero_selection_and_each_Recruit_phase_promptly()
     {
-        Run(Game(), activeDuring: []);
+        Run(Game(), until: 320);
 
-        Assert.Equal(["HeroSelection", "Recruit", "Recruit", "Recruit"], _actions.Notifications.Select(n => n.Title));
-        AssertPrompt([3, 44, 126, 214]);
+        AssertNotified([(HeroSelection, 3), (Recruit, 44), (Recruit, 126), (Recruit, 214)]);
         Assert.Equal(4, _actions.Flashes);
         Assert.False(_loop.IsFailing);
+        Assert.Empty(_failures);
     }
 
     [Fact]
     public void Nothing_happens_while_Hearthstone_is_the_active_window()
     {
-        Run(Game(), activeDuring: [(120, 130)]);
+        Run(Game(), until: 320, activeDuring: [(120, 130)]);
 
-        Assert.Equal(["HeroSelection", "Recruit", "Recruit"], _actions.Notifications.Select(n => n.Title));
-        AssertPrompt([3, 44, 214]);
+        AssertNotified([(HeroSelection, 3), (Recruit, 44), (Recruit, 214)]);
     }
 
     [Fact]
-    public void Nothing_happens_after_the_game_ends()
+    public void Nothing_happens_after_the_game_ends_until_the_next_one()
     {
-        Run(Game(), activeDuring: []);
+        Run(Game().Concat(Game(start: 400)), until: 720);
 
-        Assert.DoesNotContain(_actions.Notifications, n => n.At > TimeSpan.FromSeconds(291));
+        AssertNotified(
+        [
+            (HeroSelection, 3), (Recruit, 44), (Recruit, 126), (Recruit, 214),
+            (HeroSelection, 403), (Recruit, 444), (Recruit, 526), (Recruit, 614),
+        ]);
     }
 
     [Fact]
     public void Attaching_mid_game_notifies_only_what_comes_next()
     {
         // The app starts while the game is already in its second Recruit phase.
-        Run(Game(), activeDuring: [], attachAt: 150);
+        Run(Game(), until: 320, attachAt: 150);
 
-        Assert.Equal(["Recruit"], _actions.Notifications.Select(n => n.Title));
-        AssertPrompt([214]);
+        AssertNotified([(Recruit, 214)]);
     }
 
-    /// <summary>Each notification comes within one poll of its line being written (Design Doc, Performance: under 500 ms).</summary>
-    private void AssertPrompt(double[] writtenAt) =>
-        Assert.All(
-            _actions.Notifications.Zip(writtenAt),
-            pair => Assert.InRange(pair.First.At - TimeSpan.FromSeconds(pair.Second), TimeSpan.Zero, TimeSpan.FromMilliseconds(500)));
+    [Fact]
+    public void A_game_without_Recruit_phases_is_reported_as_not_working()
+    {
+        // A log format change could hide every Recruit phase; the player must learn that notifications stopped.
+        IEnumerable<(double At, string[] Lines)> silentGame =
+        [
+            (0, [.. LogLines.BattlegroundsGameStart()]),
+            (3, [LogLines.GameTagChange("STEP", "BEGIN_MULLIGAN")]),
+        ];
+
+        Run(silentGame, until: GameTracker.RecruitDeadline.TotalSeconds + 5);
+
+        AssertNotified([(HeroSelection, 3)]);
+        Assert.Equal([DetectionFailure.NoRecruitSignal], _failures);
+        Assert.True(_loop.IsFailing);
+    }
 
     /// <summary>
-    /// Plays the game in simulated time with a poll every 250 ms. Each step's last line is written in two parts on
-    /// either side of a poll, as Hearthstone's buffered writes can leave a partial line at the end of the file.
+    /// Checks the notifications in order. Each comes on the poll after its line was completed, 250 ms of simulated
+    /// time later because of the split write, within the Design Doc's 500 ms target.
     /// </summary>
-    private void Run(IEnumerable<(double At, string[] Lines)> game, (double From, double To)[] activeDuring, double attachAt = 0)
+    private void AssertNotified((string Title, double WrittenAt)[] expected)
+    {
+        Assert.Equal(expected.Select(e => e.Title), _actions.Notifications.Select(n => n.Title));
+        Assert.All(
+            _actions.Notifications.Zip(expected),
+            pair => Assert.InRange(pair.First.At - TimeSpan.FromSeconds(pair.Second.WrittenAt), TimeSpan.Zero, TimeSpan.FromMilliseconds(500)));
+    }
+
+    /// <summary>
+    /// Plays the games in simulated time with a poll every 250 ms. Lines end in CRLF like Hearthstone's, and each
+    /// step's last line is written in two parts on either side of a poll, split between CR and LF, as buffered
+    /// writes can leave a partial line at the end of the file.
+    /// </summary>
+    private void Run(IEnumerable<(double At, string[] Lines)> games, double until, (double From, double To)[]? activeDuring = null, double attachAt = 0)
     {
         File.WriteAllBytes(_log, []);
-        var steps = new Queue<(double At, string[] Lines)>(game);
+        var steps = new Queue<(double At, string[] Lines)>(games);
         string? pendingTail = null;
-        var end = TimeSpan.FromSeconds(320);
 
-        for (var time = TimeSpan.Zero; time <= end; time += PollInterval)
+        for (var time = TimeSpan.Zero; time.TotalSeconds <= until; time += PollInterval)
         {
             _clock.Now = time;
             var seconds = time.TotalSeconds;
-            _actions.HearthstoneActive = activeDuring.Any(a => seconds >= a.From && seconds < a.To);
+            _actions.HearthstoneActive = activeDuring?.Any(a => seconds >= a.From && seconds < a.To) ?? false;
 
             if (pendingTail is not null)
             {
@@ -129,10 +179,9 @@ public sealed class ReplayTests : IDisposable
             while (steps.TryPeek(out var step) && step.At <= seconds)
             {
                 steps.Dequeue();
-                var text = string.Concat(step.Lines.Select(l => l + "\n"));
-                var split = text.Length - 7;
-                Append(text[..split]);
-                pendingTail = text[split..];
+                var text = string.Concat(step.Lines.Select(l => l + "\r\n"));
+                Append(text[..^1]);
+                pendingTail = text[^1..];
             }
 
             if (seconds >= attachAt)
@@ -184,7 +233,8 @@ public sealed class ReplayTests : IDisposable
         }
     }
 
-    private sealed class NullLog : IDiagnosticLog
+    /// <summary>Accepts ordinary entries; an error entry fails the test with its cause.</summary>
+    private sealed class FailingLog : IDiagnosticLog
     {
         public void Write(LogEvent logEvent)
         {

@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <!-- The same hand-written log lines the unit tests use. -->
-    <Compile Include="..\KindlyBartender.Core.Tests\PowerLog\LogLines.cs" Link="EndToEnd\LogLines.cs" />
+    <Compile Include="..\KindlyBartender.Core.Tests\PowerLog\LogLines.cs" Link="Shared\PowerLog\LogLines.cs" />
   </ItemGroup>
 
   <ItemGroup>
