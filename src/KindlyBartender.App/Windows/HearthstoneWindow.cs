@@ -40,15 +40,19 @@ internal static class HearthstoneWindow
         }
 
         _ = NativeMethods.GetWindowThreadProcessId(foreground, out var processId);
+
+        // Compare process IDs; reading the foreground process's name could fail if it exits meanwhile.
+        var processes = Process.GetProcessesByName(HearthstoneProcessProbe.ProcessName);
         try
         {
-            using var process = Process.GetProcessById((int)processId);
-            return string.Equals(process.ProcessName, HearthstoneProcessProbe.ProcessName, StringComparison.OrdinalIgnoreCase);
+            return processes.Any(p => p.Id == processId);
         }
-        catch (ArgumentException)
+        finally
         {
-            // The process ended between the two calls.
-            return false;
+            foreach (var process in processes)
+            {
+                process.Dispose();
+            }
         }
     }
 
@@ -66,9 +70,9 @@ internal static class HearthstoneWindow
 
     /// <summary>
     /// Shows the window above others without activating it, so keyboard input stays where it is (PRD FR20).
-    /// Windows allows this for any app; taking focus is what it blocks.
+    /// Windows allows this for any app; taking focus is what it blocks. Returns the Win32 error code, or 0.
     /// </summary>
-    public static bool ShowInFront(IntPtr window)
+    public static int ShowInFront(IntPtr window)
     {
         if (NativeMethods.IsIconic(window))
         {
@@ -76,8 +80,31 @@ internal static class HearthstoneWindow
         }
 
         const uint flags = NativeMethods.SwpNoMove | NativeMethods.SwpNoSize | NativeMethods.SwpNoActivate | NativeMethods.SwpShowWindow;
-        return NativeMethods.SetWindowPos(window, NativeMethods.HwndTopmost, 0, 0, 0, 0, flags)
-            && NativeMethods.SetWindowPos(window, NativeMethods.HwndNoTopmost, 0, 0, 0, 0, flags);
+        var wasTopmost = (NativeMethods.GetWindowLongPtr(window, NativeMethods.GwlExStyle) & NativeMethods.WsExTopmost) != 0;
+        if (wasTopmost)
+        {
+            // Already above other windows; raising it within the topmost band is enough, and its topmost state stays.
+            return NativeMethods.SetWindowPos(window, NativeMethods.HwndTopmost, 0, 0, 0, 0, flags) ? 0 : Marshal.GetLastPInvokeError();
+        }
+
+        var error = 0;
+        try
+        {
+            if (!NativeMethods.SetWindowPos(window, NativeMethods.HwndTopmost, 0, 0, 0, 0, flags))
+            {
+                error = Marshal.GetLastPInvokeError();
+            }
+        }
+        finally
+        {
+            // Always lower it again, so a partial failure can never leave Hearthstone above everything.
+            if (!NativeMethods.SetWindowPos(window, NativeMethods.HwndNoTopmost, 0, 0, 0, 0, flags) && error == 0)
+            {
+                error = Marshal.GetLastPInvokeError();
+            }
+        }
+
+        return error;
     }
 
     /// <summary>

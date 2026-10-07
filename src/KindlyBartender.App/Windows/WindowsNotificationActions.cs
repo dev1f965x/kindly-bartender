@@ -1,9 +1,10 @@
+using System.ComponentModel;
 using KindlyBartender.Core.Notifications;
 
 namespace KindlyBartender.App.Windows;
 
-/// <summary>Carries out notifications on Windows.</summary>
-internal sealed class WindowsNotificationActions(ToastService toasts) : INotificationActions
+/// <summary>Carries out notifications on Windows. Failures go to <paramref name="onError"/> for the diagnostic log.</summary>
+internal sealed class WindowsNotificationActions(ToastService toasts, Action<string, Exception> onError) : INotificationActions
 {
     // Windows' own notification sound, so it follows the player's sound scheme.
     private const string NotificationSound = "Notification.Default";
@@ -13,30 +14,36 @@ internal sealed class WindowsNotificationActions(ToastService toasts) : INotific
     public void ShowNotification(string title, string body, bool silent) =>
         toasts.Show(ToastKind.Phase, title, body, silent, BringHearthstoneForward);
 
-    public void PlaySound() =>
-        _ = NativeMethods.PlaySound(NotificationSound, IntPtr.Zero, NativeMethods.SndAlias | NativeMethods.SndAsync | NativeMethods.SndNoDefault);
+    public void PlaySound()
+    {
+        if (!NativeMethods.PlaySound(NotificationSound, IntPtr.Zero, NativeMethods.SndAlias | NativeMethods.SndAsync | NativeMethods.SndNoDefault | NativeMethods.SndSystem))
+        {
+            onError("Play the notification sound", new Win32Exception());
+        }
+    }
 
     public void FlashHearthstone()
     {
         if (HearthstoneWindow.Find() is var window && window != IntPtr.Zero)
         {
+            // FlashWindowEx returns the window's previous state, not success, so there is nothing to check.
             HearthstoneWindow.Flash(window);
         }
     }
 
     public void ShowHearthstoneInFront()
     {
-        if (HearthstoneWindow.Find() is var window && window != IntPtr.Zero)
+        if (HearthstoneWindow.Find() is var window && window != IntPtr.Zero && HearthstoneWindow.ShowInFront(window) is var error and not 0)
         {
-            HearthstoneWindow.ShowInFront(window);
+            onError("Show Hearthstone in front", new Win32Exception(error));
         }
     }
 
-    private static void BringHearthstoneForward()
+    private void BringHearthstoneForward()
     {
-        if (HearthstoneWindow.Find() is var window && window != IntPtr.Zero)
+        if (HearthstoneWindow.Find() is var window && window != IntPtr.Zero && !HearthstoneWindow.Activate(window))
         {
-            HearthstoneWindow.Activate(window);
+            onError("Bring Hearthstone forward", new Win32Exception());
         }
     }
 }

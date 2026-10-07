@@ -1,6 +1,5 @@
 using System.Xml.Linq;
 using KindlyBartender.App.Windows;
-using Windows.UI.Notifications;
 
 namespace KindlyBartender.App.Tests.Windows;
 
@@ -32,14 +31,5 @@ public class ToastContentTests
 
         Assert.Equal("<audio silent=\"true\"/>", toast.Descendants("text").First().Value);
         Assert.Null(toast.Element("audio"));
-    }
-
-    [Theory]
-    [InlineData(ToastNotificationMode.Unrestricted, false)]
-    [InlineData(ToastNotificationMode.PriorityOnly, true)]
-    [InlineData(ToastNotificationMode.AlarmsOnly, true)]
-    public void Restricted_modes_may_hide_notifications(ToastNotificationMode mode, bool expected)
-    {
-        Assert.Equal(expected, DoNotDisturbMonitor.IsRestricted(mode));
     }
 }

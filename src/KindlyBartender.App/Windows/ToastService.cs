@@ -1,9 +1,13 @@
+using System.Runtime.InteropServices;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
 
 namespace KindlyBartender.App.Windows;
 
-/// <summary>Kinds of notification; a new one replaces the previous one of the same kind.</summary>
+/// <summary>
+/// Kinds of notification. A new one replaces the previous one of the same kind, so a phase notification never
+/// pushes out a notice that asks the player to act, such as missing log settings.
+/// </summary>
 internal enum ToastKind
 {
     Phase,
@@ -16,8 +20,8 @@ internal enum ToastKind
 /// </summary>
 /// <remarks>
 /// The Activated event fires only while the notification object is alive, so the latest notification of each
-/// kind is kept until it is replaced or the player dismisses it. A banner that times out moves to the
-/// notification center and stays selectable there.
+/// kind is kept until it is replaced, fails, or the player dismisses it; at most one per kind is held. A banner
+/// that times out moves to the notification center and stays selectable there until it expires.
 /// </remarks>
 internal sealed class ToastService(Action<string, Exception> onError)
 {
@@ -30,6 +34,7 @@ internal sealed class ToastService(Action<string, Exception> onError)
     private readonly Dictionary<ToastKind, ToastNotification> _latest = [];
     private ToastNotifier? _notifier;
 
+    /// <summary>Shows a notification; <paramref name="onSelected"/> runs on a background thread when the player selects it.</summary>
     public void Show(ToastKind kind, string title, string body, bool silent, Action onSelected)
     {
         try
@@ -42,34 +47,54 @@ internal sealed class ToastService(Action<string, Exception> onError)
                 Group = Group,
                 ExpirationTime = DateTimeOffset.Now + Lifetime,
             };
-            toast.Activated += (_, _) => onSelected();
+            toast.Activated += (_, _) => OnSelected(onSelected);
             toast.Dismissed += (sender, args) => OnDismissed(kind, sender, args);
-            toast.Failed += (_, args) => onError("Show a notification", args.ErrorCode);
+            toast.Failed += (sender, args) =>
+            {
+                onError("Show a notification", args.ErrorCode);
+                Release(kind, sender);
+            };
 
             lock (_gate)
             {
-                _latest[kind] = toast;
                 _notifier ??= ToastNotificationManager.CreateToastNotifier(AppIdentity.AppUserModelId);
                 _notifier.Show(toast);
+                // Only now, so a failed Show keeps the previous notification selectable.
+                _latest[kind] = toast;
             }
         }
-        catch (Exception e) when (e is System.Runtime.InteropServices.COMException or ArgumentException or InvalidOperationException)
+        catch (Exception e) when (e is COMException or ArgumentException or InvalidOperationException)
         {
             onError("Show a notification", e);
+        }
+    }
+
+    private void OnSelected(Action onSelected)
+    {
+        try
+        {
+            onSelected();
+        }
+        catch (Exception e) when (e is COMException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            onError("Handle a notification selection", e);
         }
     }
 
     private void OnDismissed(ToastKind kind, ToastNotification sender, ToastDismissedEventArgs args)
     {
         // TimedOut means the banner moved to the notification center, where it can still be selected.
-        if (args.Reason == ToastDismissalReason.TimedOut)
+        if (args.Reason != ToastDismissalReason.TimedOut)
         {
-            return;
+            Release(kind, sender);
         }
+    }
 
+    private void Release(ToastKind kind, ToastNotification toast)
+    {
         lock (_gate)
         {
-            if (_latest.TryGetValue(kind, out var current) && ReferenceEquals(current, sender))
+            if (_latest.TryGetValue(kind, out var current) && ReferenceEquals(current, toast))
             {
                 _latest.Remove(kind);
             }

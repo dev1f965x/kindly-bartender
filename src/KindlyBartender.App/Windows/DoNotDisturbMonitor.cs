@@ -1,25 +1,57 @@
+using System.Runtime.InteropServices;
+using KindlyBartender.Core.Notifications;
 using Windows.UI.Notifications;
 
 namespace KindlyBartender.App.Windows;
 
-/// <summary>
-/// Reports whether Windows may hide the app's notifications (PRD FR22). The app never bypasses the setting; it
-/// only tells the player.
-/// </summary>
-internal sealed class DoNotDisturbMonitor : IDisposable
+/// <summary>Reads the Windows notification mode (PRD FR22).</summary>
+internal sealed class DoNotDisturbMonitor : IDoNotDisturb, IDisposable
 {
-    private readonly ToastNotificationManagerForUser _manager = ToastNotificationManager.GetDefault();
+    private readonly ToastNotificationManagerForUser? _manager;
+    private readonly Action<string, Exception> _onError;
 
-    public DoNotDisturbMonitor() => _manager.NotificationModeChanged += OnChanged;
+    /// <param name="onError">Receives errors; when the mode cannot be read, notifications are assumed not hidden.</param>
+    public DoNotDisturbMonitor(Action<string, Exception> onError)
+    {
+        _onError = onError;
+        try
+        {
+            _manager = ToastNotificationManager.GetDefault();
+            _manager.NotificationModeChanged += OnChanged;
+        }
+        catch (COMException e)
+        {
+            onError("Read the notification mode", e);
+        }
+    }
 
     public event Action<bool>? Changed;
 
-    /// <summary>True when Do not disturb or another mode lets only priority notifications or alarms through.</summary>
-    public bool MayHideNotifications => IsRestricted(_manager.NotificationMode);
+    public bool MayHideNotifications
+    {
+        get
+        {
+            try
+            {
+                return _manager is not null && IsRestricted(_manager.NotificationMode);
+            }
+            catch (COMException e)
+            {
+                _onError("Read the notification mode", e);
+                return false;
+            }
+        }
+    }
 
-    public void Dispose() => _manager.NotificationModeChanged -= OnChanged;
+    public void Dispose()
+    {
+        if (_manager is not null)
+        {
+            _manager.NotificationModeChanged -= OnChanged;
+        }
+    }
 
     internal static bool IsRestricted(ToastNotificationMode mode) => mode != ToastNotificationMode.Unrestricted;
 
-    private void OnChanged(ToastNotificationManagerForUser sender, object args) => Changed?.Invoke(IsRestricted(sender.NotificationMode));
+    private void OnChanged(ToastNotificationManagerForUser sender, object args) => Changed?.Invoke(MayHideNotifications);
 }

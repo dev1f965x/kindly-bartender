@@ -23,6 +23,12 @@ internal static partial class NativeMethods
     public const uint SndAsync = 0x1;
     public const uint SndNoDefault = 0x2;
 
+    // Follows the system sounds volume, like Windows' own notification sounds.
+    public const uint SndSystem = 0x200000;
+
+    public const int GwlExStyle = -20;
+    public const nint WsExTopmost = 0x8;
+
     [StructLayout(LayoutKind.Sequential)]
     public struct FlashWindowInfo
     {
@@ -54,6 +60,9 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool FlashWindowEx(ref FlashWindowInfo info);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    public static partial nint GetWindowLongPtr(IntPtr window, int index);
 
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
