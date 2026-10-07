@@ -52,8 +52,8 @@ $problems = foreach ($string in Get-Strings) {
         }
     }
     # Korean sentences use 합니다체; a sentence ending in 요 is 해요체, except the -세요 request form the guide
-    # allows and the noun 필요.
-    if ($text -match '(?<![세필])요[.?]?(\s|$)') {
+    # allows. Only sentence endings are checked, so nouns such as 필요 or 중요 do not match.
+    if ($text -match '(?<!세)요[.?](\s|$)') {
         "$($string.Source): 해요체 ending; use 합니다체"
     }
 }
