@@ -1,5 +1,5 @@
 <Project>
-  <ItemGroup>
-    <PackageVersion Include="xunit.v3" Version="4.0.1" />
-  </ItemGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
 </Project>

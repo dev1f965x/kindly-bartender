@@ -19,7 +19,7 @@ The commands are listed in [README.md](README.md#development). Run every check (
 | Path | Contents |
 | --- | --- |
 | `src/KindlyBartender.Core` | Log parsing, game tracking, settings, configuration file editing. No Windows APIs. |
-| `src/KindlyBartender.App` | WPF tray app and Windows adapters (`net10.0-windows`). |
+| `src/KindlyBartender.App` | WPF tray app and Windows adapters (`net10.0-windows10.0.22621.0`). |
 | `tests/` | xUnit v3 test projects, run through Microsoft.Testing.Platform. |
 | `scripts/` | The check script and the checks it runs. |
 

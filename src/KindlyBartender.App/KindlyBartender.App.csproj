@@ -11,8 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Only NotifyIcon is used from Windows Forms; its implicit using makes WPF types like Application ambiguous. -->
+    <!-- Only NotifyIcon is used from Windows Forms; its implicit usings make WPF types such as Application and Point ambiguous. -->
     <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
   <ItemGroup>
