@@ -15,3 +15,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Setup of Hearthstone's log.config and client.config that keeps other tools' settings, backs up the originals, and asks for administrator rights only when a write is denied.
 - UI words (CONTENT.md), visual rules (DESIGN.md), wireframes, and a check for forbidden words and punctuation in UI strings.
 - Windows notifications, sound, taskbar flashing, showing Hearthstone in front without taking focus, and a Do not disturb check.
+- Tray icon and menu, one copy per user, settings file, start with Windows, Korean and English UI text generated from CONTENT.md, and the notification rules.

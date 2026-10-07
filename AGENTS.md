@@ -23,7 +23,7 @@ The commands are listed in [README.md](README.md#development). Run every check (
 | `tests/` | xUnit v3 test projects, run through Microsoft.Testing.Platform. |
 | `scripts/` | The check script and the checks it runs. |
 | `design/wireframes/` | Low-fidelity wireframes (`index.html`) and their capture (`capture.ps1`). |
-| `CONTENT.md`, `DESIGN.md` | UI words and visual rules; `scripts/Test-Content.ps1` checks the strings. |
+| `CONTENT.md`, `DESIGN.md` | UI words and visual rules; `scripts/Test-Content.ps1` checks the strings. Edit UI words only in CONTENT.md, then run `scripts/Sync-Strings.ps1` to regenerate `src/KindlyBartender.App/Resources/Strings*.resx`. |
 
 ## Conventions
 
