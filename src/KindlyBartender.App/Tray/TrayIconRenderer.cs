@@ -112,4 +112,77 @@ internal static class TrayIconRenderer
         ico.Position = 0;
         return new Icon(ico);
     }
+
+    /// <summary>
+    /// The app's icon for the executable, the Start menu, and the installer: the Ready glyph on a light tile, so it
+    /// reads on light and dark backgrounds alike. Written by an opt-in test into Assets; see DESIGN.md.
+    /// </summary>
+    internal static byte[] AppIconFile(int[] sizes)
+    {
+        var images = sizes.Select(size =>
+        {
+            using var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
+            using (var graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                graphics.Clear(Color.Transparent);
+                var inset = size / 32f;
+                var tile = new RectangleF(inset, inset, size - (2 * inset) - 1, size - (2 * inset) - 1);
+                using var path = RoundedRectangle(tile, size / 5f);
+                using var fill = new SolidBrush(Color.FromArgb(0xF3, 0xF3, 0xF3));
+                using var border = new Pen(Color.FromArgb(0xC8, 0xC8, 0xC8), Math.Max(1f, size / 64f));
+                graphics.FillPath(fill, path);
+                graphics.DrawPath(border, path);
+
+                var glyphSize = (int)(size * 0.7f);
+                using var glyph = Draw(TrayStatus.Ready, lightTaskbar: true, glyphSize);
+                var offset = (size - glyphSize) / 2;
+                graphics.DrawImage(glyph, offset, offset, glyphSize, glyphSize);
+            }
+
+            using var png = new MemoryStream();
+            bitmap.Save(png, ImageFormat.Png);
+            return (Size: size, Png: png.ToArray());
+        }).ToList();
+
+        using var ico = new MemoryStream();
+        using (var writer = new BinaryWriter(ico, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            writer.Write((short)0);
+            writer.Write((short)1);
+            writer.Write((short)images.Count);
+            var offset = 6 + (16 * images.Count);
+            foreach (var (size, png) in images)
+            {
+                writer.Write((byte)(size >= 256 ? 0 : size));
+                writer.Write((byte)(size >= 256 ? 0 : size));
+                writer.Write((byte)0);
+                writer.Write((byte)0);
+                writer.Write((short)1);
+                writer.Write((short)32);
+                writer.Write(png.Length);
+                writer.Write(offset);
+                offset += png.Length;
+            }
+
+            foreach (var (_, png) in images)
+            {
+                writer.Write(png);
+            }
+        }
+
+        return ico.ToArray();
+    }
+
+    private static GraphicsPath RoundedRectangle(RectangleF bounds, float radius)
+    {
+        var diameter = radius * 2;
+        var path = new GraphicsPath();
+        path.AddArc(bounds.X, bounds.Y, diameter, diameter, 180, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Y, diameter, diameter, 270, 90);
+        path.AddArc(bounds.Right - diameter, bounds.Bottom - diameter, diameter, diameter, 0, 90);
+        path.AddArc(bounds.X, bounds.Bottom - diameter, diameter, diameter, 90, 90);
+        path.CloseFigure();
+        return path;
+    }
 }

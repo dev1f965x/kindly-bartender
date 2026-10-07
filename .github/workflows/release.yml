@@ -1,0 +1,53 @@
+name: Release
+
+# A version tag builds the release files and attaches them to a draft release; the maintainer reviews and
+# publishes it.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      # Creating the draft release.
+      contents: write
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      TESTINGPLATFORM_TELEMETRY_OPTOUT: '1'
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Check
+        shell: pwsh
+        run: ./scripts/check.ps1
+      - name: Build release files
+        shell: pwsh
+        run: |
+          $version = $env:TAG.TrimStart('v')
+          ./scripts/Get-ReleaseNotes.ps1 -Version $version -OutputPath artifacts-notes.md
+          ./scripts/New-Release.ps1 -Version $version
+      - name: Create draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $files = Get-ChildItem artifacts/release -File |
+            Where-Object { $_.Name -like '*-Setup.exe' -or $_.Name -like '*-Portable.zip' -or $_.Name -eq 'SHA256SUMS.txt' }
+          gh release create $env:TAG --draft --verify-tag --title "Kindly Bartender $($env:TAG.TrimStart('v'))" `
+            --notes-file artifacts-notes.md @($files.FullName)
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed with exit code $LASTEXITCODE" }

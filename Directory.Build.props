@@ -2,6 +2,9 @@
   <PropertyGroup>
     <!-- The release workflow sets the version from the tag; this is the version being built. -->
     <Version>0.1.0</Version>
+    <!-- Releases are self-contained win-x64 builds. Listed for every project, so that publishing for it restores in
+         locked mode with the runtime packages in the lock files. -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
