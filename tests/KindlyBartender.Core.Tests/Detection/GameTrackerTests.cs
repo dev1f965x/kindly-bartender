@@ -208,8 +208,10 @@ public class GameTrackerTests
 
         Feed(LogLines.BattlegroundsGameStart());
         _clock.Advance(TimeSpan.FromMinutes(4));
-
         Assert.Null(_tracker.CheckDeadline());
+
+        _clock.Advance(TimeSpan.FromMinutes(1));
+        Assert.Equal(new DetectionFailing(DetectionFailure.NoRecruitSignal), _tracker.CheckDeadline());
     }
 
     [Fact]
