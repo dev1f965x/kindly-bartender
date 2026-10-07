@@ -1,7 +1,11 @@
 #Requires -Version 7
 # Writes THIRD-PARTY-NOTICES.txt for the shipped app: every NuGet package the app uses, with its license text,
 # and the .NET runtime that a self-contained build carries. Run by the release workflow.
-param([Parameter(Mandatory)][string]$OutputPath)
+param(
+    [Parameter(Mandatory)][string]$OutputPath,
+    # The self-contained build, whose dependency file names the runtime versions shipped.
+    [Parameter(Mandatory)][string]$PublishDirectory
+)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $project = Join-Path $root 'src/KindlyBartender.App/KindlyBartender.App.csproj'
@@ -36,13 +40,47 @@ try {
     [void]$builder.AppendLine('Kindly Bartender includes the following third-party software.')
     [void]$builder.AppendLine()
 
-    [void]$builder.AppendLine('.NET runtime, WPF, and Windows Forms')
-    [void]$builder.AppendLine('License: MIT. Copyright (c) .NET Foundation and Contributors.')
-    [void]$builder.AppendLine('Their own third-party notices: https://github.com/dotnet/runtime/blob/main/THIRD-PARTY-NOTICES.TXT,')
-    [void]$builder.AppendLine('https://github.com/dotnet/wpf/blob/main/THIRD-PARTY-NOTICES.TXT, https://github.com/dotnet/winforms/blob/main/THIRD-PARTY-NOTICES.TXT')
-    [void]$builder.AppendLine()
-    [void]$builder.AppendLine($mit)
-    [void]$builder.AppendLine()
+    # The runtime versions actually shipped, from the self-contained build's dependency file.
+    $deps = Get-Content (Join-Path $PublishDirectory 'KindlyBartender.deps.json') -Raw | ConvertFrom-Json -AsHashtable
+    $libraries = $deps['libraries'].Keys
+    $runtime = ($libraries | Where-Object { $_ -like 'runtimepack.Microsoft.NETCore.App.Runtime.win-x64/*' }) -replace '^.*/', ''
+    $desktop = ($libraries | Where-Object { $_ -like 'runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/*' }) -replace '^.*/', ''
+    if (-not $runtime -or -not $desktop) {
+        throw 'The runtime versions were not found in KindlyBartender.deps.json; is the build self-contained?'
+    }
+
+    $packages = ((dotnet nuget locals global-packages --list) -replace '^global-packages:\s*', '').Trim()
+    $runtimePack = Join-Path $packages "microsoft.netcore.app.runtime.win-x64/$runtime"
+    $desktopPack = Join-Path $packages "microsoft.windowsdesktop.app.runtime.win-x64/$desktop"
+
+    function Add-Section([string]$Title, [string]$Text) {
+        [void]$builder.AppendLine(('=' * 78))
+        [void]$builder.AppendLine($Title)
+        [void]$builder.AppendLine()
+        [void]$builder.AppendLine($Text.Trim())
+        [void]$builder.AppendLine()
+    }
+
+    # WPF and Windows Forms keep their notices in their repositories, tagged with the runtime version.
+    function Get-Notice([string]$Repository) {
+        $url = "https://raw.githubusercontent.com/dotnet/$Repository/v$desktop/THIRD-PARTY-NOTICES.TXT"
+        (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
+    }
+
+    Add-Section ".NET runtime $runtime" (Get-Content (Join-Path $runtimePack 'LICENSE.TXT') -Raw)
+    Add-Section ".NET runtime $runtime third-party notices" (Get-Content (Join-Path $runtimePack 'THIRD-PARTY-NOTICES.TXT') -Raw)
+    Add-Section "Windows Desktop runtime (WPF, Windows Forms) $desktop" (Get-Content (Join-Path $desktopPack 'LICENSE') -Raw)
+    Add-Section "WPF $desktop third-party notices" (Get-Notice 'wpf')
+    Add-Section "Windows Forms $desktop third-party notices" (Get-Notice 'winforms')
+
+    # Velopack's setup program, Update.exe, and launcher are Rust programs; their notices are generated once per
+    # Velopack version with cargo-about (third-party/README.md) and must match the version the app uses.
+    $velopack = ((Get-Content $json -Raw | ConvertFrom-Json) | Where-Object PackageId -eq 'Velopack').PackageVersion
+    $rustNotices = Join-Path $root "third-party/velopack-$velopack-rust-notices.txt"
+    if (-not (Test-Path $rustNotices)) {
+        throw "Missing $rustNotices; generate it for Velopack $velopack as third-party/README.md describes."
+    }
+    Add-Section "Velopack $velopack Rust components" (Get-Content $rustNotices -Raw)
 
     foreach ($package in (Get-Content $json -Raw | ConvertFrom-Json) | Sort-Object PackageId) {
         [void]$builder.AppendLine(('=' * 78))

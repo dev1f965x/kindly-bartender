@@ -16,11 +16,11 @@ Requires Windows 10 version 2004 or later, or Windows 11.
 2. The files are not code-signed yet, so SmartScreen may say the app is unrecognized. Compare the file's SHA-256 with `SHA256SUMS.txt` (`Get-FileHash .\KindlyBartender-win-Setup.exe` in PowerShell), then select **More info** and **Run anyway**.
 3. Open Kindly Bartender from the Start menu and follow the Log settings window. It changes two Hearthstone settings files only after you agree; restart Hearthstone if it was running.
 
-To run it without installing, extract `KindlyBartender-win-Portable.zip` and run `Kindly Bartender.exe`.
+To run it without installing, extract `KindlyBartender-win-Portable.zip` and run `Kindly Bartender.exe`. The portable copy keeps its settings and diagnostic log in its own folder. To remove it, turn off Start with Windows in Settings, exit it from the tray, and delete the folder.
 
 ## Uninstall
 
-Uninstall it from **Settings > Apps > Installed apps**. This removes the app, its settings and diagnostic log, and the start-with-Windows entry. Hearthstone's log settings stay, because other tools such as deck trackers may use them. To undo them, delete the `[Power]` section from `%LOCALAPPDATA%\Blizzard\Hearthstone\log.config` and the `FileSizeLimit.Int` line from `client.config` in the Hearthstone folder.
+Uninstall it from **Settings > Apps > Installed apps** (Windows 11) or **Settings > Apps > Apps & features** (Windows 10). This removes the app, its settings and diagnostic log, and the start-with-Windows entry. Hearthstone's log settings stay, because other tools such as deck trackers may use them. To undo them, delete the `[Power]` section from `%LOCALAPPDATA%\Blizzard\Hearthstone\log.config` and the `FileSizeLimit.Int` line from `client.config` in the Hearthstone folder.
 
 ## Privacy
 

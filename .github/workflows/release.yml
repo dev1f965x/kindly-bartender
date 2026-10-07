@@ -1,7 +1,8 @@
 name: Release
 
 # A version tag builds the release files and attaches them to a draft release; the maintainer reviews and
-# publishes it.
+# publishes it. Building and testing run without write access; only the last job, which runs no project code,
+# can create the release.
 on:
   push:
     tags: ['v*.*.*']
@@ -14,12 +15,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
+  build:
     runs-on: windows-latest
     timeout-minutes: 30
-    permissions:
-      # Creating the draft release.
-      contents: write
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
@@ -39,15 +37,41 @@ jobs:
         shell: pwsh
         run: |
           $version = $env:TAG.TrimStart('v')
-          ./scripts/Get-ReleaseNotes.ps1 -Version $version -OutputPath artifacts-notes.md
           ./scripts/New-Release.ps1 -Version $version
+          ./scripts/Get-ReleaseNotes.ps1 -Version $version -OutputPath artifacts/release/notes.md
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release
+          path: |
+            artifacts/release/*-Setup.exe
+            artifacts/release/*-Portable.zip
+            artifacts/release/SHA256SUMS.txt
+            artifacts/release/notes.md
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # Creating the draft release.
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release
+          path: release
+      - name: Verify checksums
+        working-directory: release
+        run: sha256sum --check --strict SHA256SUMS.txt
       - name: Create draft release
-        shell: pwsh
+        working-directory: release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          $files = Get-ChildItem artifacts/release -File |
-            Where-Object { $_.Name -like '*-Setup.exe' -or $_.Name -like '*-Portable.zip' -or $_.Name -eq 'SHA256SUMS.txt' }
-          gh release create $env:TAG --draft --verify-tag --title "Kindly Bartender $($env:TAG.TrimStart('v'))" `
-            --notes-file artifacts-notes.md @($files.FullName)
-          if ($LASTEXITCODE -ne 0) { throw "gh release create failed with exit code $LASTEXITCODE" }
+          gh release create "$TAG" --draft --verify-tag --title "Kindly Bartender ${TAG#v}" --notes-file notes.md \
+            ./*-Setup.exe ./*-Portable.zip SHA256SUMS.txt

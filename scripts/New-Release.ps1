@@ -33,11 +33,14 @@ if (Test-Path $output) {
 Push-Location $root
 try {
     Invoke-Native 'Restore tools' { dotnet tool restore }
+    # No debug files, XML docs, or build paths in the shipped files; local paths contain the Windows user name.
     Invoke-Native 'Publish' {
         dotnet publish src/KindlyBartender.App/KindlyBartender.App.csproj --configuration Release --runtime win-x64 `
-            --self-contained true -p:Version=$Version --output $publish
+            --self-contained true -p:Version=$Version `
+            -p:ContinuousIntegrationBuild=true -p:DebugType=none -p:PublishDocumentationFile=false `
+            -p:AllowedReferenceRelatedFileExtensions=.none --output $publish
     }
-    & (Join-Path $PSScriptRoot 'New-ThirdPartyNotices.ps1') -OutputPath (Join-Path $publish 'THIRD-PARTY-NOTICES.txt')
+    & (Join-Path $PSScriptRoot 'New-ThirdPartyNotices.ps1') -OutputPath (Join-Path $publish 'THIRD-PARTY-NOTICES.txt') -PublishDirectory $publish
     # Start menu only: a desktop shortcut the player did not ask for is clutter.
     Invoke-Native 'Pack' {
         dotnet vpk pack --packId $packId --packVersion $Version --packDir $publish --mainExe KindlyBartender.exe `

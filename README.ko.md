@@ -16,11 +16,11 @@ Windows 10 버전 2004 이상 또는 Windows 11이 필요합니다.
 2. 아직 코드 서명이 없어 SmartScreen이 인식할 수 없는 앱이라고 경고할 수 있습니다. 파일의 SHA-256을 `SHA256SUMS.txt`와 비교한 뒤(PowerShell에서 `Get-FileHash .\KindlyBartender-win-Setup.exe`) **추가 정보**와 **실행**을 선택하세요.
 3. 시작 메뉴에서 Kindly Bartender를 열고 로그 설정 창을 따르세요. 동의한 뒤에만 하스스톤 설정 파일 두 개를 바꿉니다. 하스스톤이 실행 중이었다면 다시 시작하세요.
 
-설치하지 않고 쓰려면 `KindlyBartender-win-Portable.zip`의 압축을 풀고 `Kindly Bartender.exe`를 실행하세요.
+설치하지 않고 쓰려면 `KindlyBartender-win-Portable.zip`의 압축을 풀고 `Kindly Bartender.exe`를 실행하세요. 포터블 버전은 설정과 진단 기록을 자기 폴더에 보관합니다. 지우려면 설정에서 Windows 시작 시 실행을 끄고 트레이에서 종료한 뒤 폴더를 삭제하세요.
 
 ## 제거
 
-**설정 > 앱 > 설치된 앱**에서 제거합니다. 앱과 설정, 진단 기록, Windows 시작 시 실행 항목이 지워집니다. 덱 트래커 같은 다른 도구가 쓸 수 있어 하스스톤의 로그 설정은 그대로 둡니다. 되돌리려면 `%LOCALAPPDATA%\Blizzard\Hearthstone\log.config`에서 `[Power]` 구역을, 하스스톤 폴더의 `client.config`에서 `FileSizeLimit.Int` 줄을 지우세요.
+**설정 > 앱 > 설치된 앱**(Windows 11) 또는 **설정 > 앱 > 앱 및 기능**(Windows 10)에서 제거합니다. 앱과 설정, 진단 기록, Windows 시작 시 실행 항목이 지워집니다. 덱 트래커 같은 다른 도구가 쓸 수 있어 하스스톤의 로그 설정은 그대로 둡니다. 되돌리려면 `%LOCALAPPDATA%\Blizzard\Hearthstone\log.config`에서 `[Power]` 구역을, 하스스톤 폴더의 `client.config`에서 `FileSizeLimit.Int` 줄을 지우세요.
 
 ## 개인정보
 
