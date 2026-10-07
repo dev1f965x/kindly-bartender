@@ -12,7 +12,7 @@ Windows native: the .NET SDK pinned in `global.json` and VS Code with C# Dev Kit
 
 ## Commands
 
-The commands are listed in [README.md](README.md#development). Run every check (format and lint, type check, tests, build, end-to-end) before handing off any change. After a dependency change, run all of them even if the change looks unrelated.
+The commands are listed in [README.md](README.md#development). Run every check (`pwsh scripts/check.ps1`: format, build with analyzers, tests including end-to-end) before handing off any change. After a dependency change, run all of them even if the change looks unrelated.
 
 ## Structure
 

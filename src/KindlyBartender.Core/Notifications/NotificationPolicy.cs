@@ -3,7 +3,7 @@ using KindlyBartender.Core.Settings;
 
 namespace KindlyBartender.Core.Notifications;
 
-/// <summary>Decides what to do when a phase starts (PRD FR16 to FR21).</summary>
+/// <summary>Decides what to do when a phase starts.</summary>
 public sealed class NotificationPolicy(INotificationActions actions, Func<Phase, (string Title, string Body)> text)
 {
     public void OnPhaseStarted(Phase phase, AppSettings settings, bool paused)

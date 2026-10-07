@@ -6,7 +6,7 @@ using KindlyBartender.Core.Updates;
 namespace KindlyBartender.App.Updates;
 
 /// <summary>
-/// Asks GitHub once per start whether a newer release exists (PRD Q2). It only tells the player; nothing is
+/// Asks GitHub once per start whether a newer release exists. It only tells the player; nothing is
 /// downloaded or installed. Failures are logged and otherwise ignored.
 /// </summary>
 internal static class UpdateChecker

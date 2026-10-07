@@ -12,7 +12,7 @@
   <data name="Toast.NotWorking.LogCapped" xml:space="preserve"><value>Hearthstone stopped writing its log. Restart Hearthstone.</value></data>
   <data name="Toast.NotWorking.NoSignal" xml:space="preserve"><value>No Recruit phase was found in this game. Kindly Bartender may need an update; check About for a new version.</value></data>
   <data name="Toast.SetupNeeded.Title" xml:space="preserve"><value>Log settings are missing</value></data>
-  <data name="Toast.SetupNeeded.Body" xml:space="preserve"><value>Hearthstone’s log settings were removed. Select to review them.</value></data>
+  <data name="Toast.SetupNeeded.Body" xml:space="preserve"><value>Hearthstone’s log settings were removed. Select to open Log settings.</value></data>
   <data name="Tray.Status.SetupNeeded" xml:space="preserve"><value>Log settings needed</value></data>
   <data name="Tray.Status.RestartNeeded" xml:space="preserve"><value>Hearthstone restart needed</value></data>
   <data name="Tray.Status.NotWorking" xml:space="preserve"><value>Notifications may not work</value></data>
@@ -76,7 +76,7 @@
   <data name="About.Files.Heading" xml:space="preserve"><value>What Kindly Bartender reads and changes</value></data>
   <data name="About.Files.Body" xml:space="preserve"><value>It reads Hearthstone’s Power.log while the game runs. After you agree, it changes log settings in two files: {0}, {1}. Uninstalling doesn’t undo these changes, because other tools may use them. To undo them, delete the [Power] section from the first file and the FileSizeLimit.Int line from the second.</value></data>
   <data name="About.Privacy.Heading" xml:space="preserve"><value>Privacy</value></data>
-  <data name="About.Privacy.Body" xml:space="preserve"><value>Kindly Bartender collects no personal data and sends nothing about you or your games. At startup it checks GitHub for a new version, so GitHub sees your IP address, as with any web request.</value></data>
+  <data name="About.Privacy.Body" xml:space="preserve"><value>Kindly Bartender collects no personal data and sends nothing about you or your games. At startup it checks GitHub for a new version, so GitHub sees your IP address and the app version, as with any web request.</value></data>
   <data name="About.License" xml:space="preserve"><value>License: MIT</value></data>
   <data name="About.ThirdParty" xml:space="preserve"><value>Third-party notices</value></data>
   <data name="About.Feedback" xml:space="preserve"><value>Report a problem</value></data>

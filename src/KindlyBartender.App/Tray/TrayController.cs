@@ -8,7 +8,7 @@ namespace KindlyBartender.App.Tray;
 internal sealed record TrayView(TrayStatus Status, bool Paused, bool DoNotDisturb);
 
 /// <summary>
-/// The tray icon and its menu (PRD FR23). Create and update it on the UI thread; menu choices are raised as
+/// The tray icon and its menu. Create and update it on the UI thread; menu choices are raised as
 /// events on the UI thread.
 /// </summary>
 internal sealed class TrayController : IDisposable

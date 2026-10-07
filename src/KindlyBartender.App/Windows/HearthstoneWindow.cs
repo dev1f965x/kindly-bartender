@@ -30,7 +30,7 @@ internal static class HearthstoneWindow
         }
     }
 
-    /// <summary>Whether the foreground window belongs to a Hearthstone process (PRD FR16).</summary>
+    /// <summary>Whether the foreground window belongs to a Hearthstone process.</summary>
     public static bool IsActive()
     {
         var foreground = NativeMethods.GetForegroundWindow();
@@ -56,7 +56,7 @@ internal static class HearthstoneWindow
         }
     }
 
-    /// <summary>Flashes the taskbar button until Hearthstone becomes the active window (PRD FR18).</summary>
+    /// <summary>Flashes the taskbar button until Hearthstone becomes the active window.</summary>
     public static void Flash(IntPtr window)
     {
         var info = new NativeMethods.FlashWindowInfo
@@ -69,7 +69,7 @@ internal static class HearthstoneWindow
     }
 
     /// <summary>
-    /// Shows the window above others without activating it, so keyboard input stays where it is (PRD FR20).
+    /// Shows the window above others without activating it, so keyboard input stays where it is.
     /// Windows allows this for any app; taking focus is what it blocks. Returns the Win32 error code, or 0.
     /// </summary>
     public static int ShowInFront(IntPtr window)
@@ -109,7 +109,7 @@ internal static class HearthstoneWindow
 
     /// <summary>
     /// Restores and activates the window. Works right after the player selects a notification, which gives this
-    /// process the right to change the foreground window (PRD FR17); otherwise Windows only flashes the button.
+    /// process the right to change the foreground window; otherwise Windows only flashes the button.
     /// </summary>
     public static bool Activate(IntPtr window)
     {

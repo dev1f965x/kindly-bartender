@@ -143,7 +143,7 @@ public sealed class ReplayTests : IDisposable
 
     /// <summary>
     /// Checks the notifications in order. Each comes on the poll after its line was completed, 250 ms of simulated
-    /// time later because of the split write, within the Design Doc's 500 ms target.
+    /// time later because of the split write, within the 500 ms target.
     /// </summary>
     private void AssertNotified((string Title, double WrittenAt)[] expected)
     {

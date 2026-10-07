@@ -22,7 +22,7 @@ body:
     id: environment
     attributes:
       label: Version and platform
-      placeholder: Version, operating system, and browser or device if relevant
+      placeholder: App version (from About) and Windows version
     validations:
       required: true
   - type: markdown

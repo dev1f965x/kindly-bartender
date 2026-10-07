@@ -1,6 +1,6 @@
 # CONTENT.md
 
-The words Kindly Bartender shows: UI strings, notifications, and the README's product description. It applies the general content guide to this product. `scripts/Test-Content.ps1` enforces the forbidden words and punctuation, and `src/KindlyBartender.App/Resources` holds the strings in this file.
+The words Kindly Bartender shows: UI strings, notifications, and the README's product description. `scripts/Test-Content.ps1` enforces the forbidden words and punctuation, and `src/KindlyBartender.App/Resources` holds the strings in this file.
 
 ## Voice
 
@@ -20,7 +20,7 @@ Use only these words for these concepts. Add a term here before using a new one 
 | The game's maker | Blizzard Entertainment, Blizzard | 블리자드 엔터테인먼트, 블리자드 | Korean text uses the full name at the first mention in a string and 블리자드 after it; the trademark line keeps the Latin legal name. |
 | The game | Hearthstone | 하스스톤 | A Blizzard trademark; used only to name the game. The trademark line keeps the Latin name. |
 | The mode | Battlegrounds | 전장 | |
-| The phase to buy minions | Recruit phase | 상점 단계 | Players say "상점"; the UI says 상점 단계 when a phase is meant. To confirm against the Korean client. |
+| The phase to buy minions | Recruit phase | 상점 단계 | Players say "상점"; the UI says 상점 단계 when a phase is meant. |
 | Choosing a hero | hero selection | 영웅 선택 | |
 | A Windows toast | notification | 알림 | |
 | Turning notifications off for a while | pause / resume | 일시 중지 / 다시 받기 | 다시 시작 means restarting Hearthstone only. |
@@ -56,7 +56,7 @@ IDs match the resource keys. `{0}` is a value filled in by the app.
 | Toast.NotWorking.LogCapped | Hearthstone stopped writing its log. Restart Hearthstone. | 하스스톤이 로그 기록을 멈췄습니다. 하스스톤을 다시 시작하세요. |
 | Toast.NotWorking.NoSignal | No Recruit phase was found in this game. Kindly Bartender may need an update; check About for a new version. | 이 게임에서 상점 단계를 찾지 못했습니다. Kindly Bartender 업데이트가 필요할 수 있습니다. 정보에서 새 버전을 확인하세요. |
 | Toast.SetupNeeded.Title | Log settings are missing | 로그 설정이 없습니다 |
-| Toast.SetupNeeded.Body | Hearthstone’s log settings were removed. Select to review them. | 하스스톤의 로그 설정이 지워졌습니다. 선택하면 로그 설정 창이 열립니다. |
+| Toast.SetupNeeded.Body | Hearthstone’s log settings were removed. Select to open Log settings. | 하스스톤의 로그 설정이 지워졌습니다. 선택하면 로그 설정 창이 열립니다. |
 
 ### Tray
 
@@ -82,7 +82,7 @@ IDs match the resource keys. `{0}` is a value filled in by the app.
 | ID | English | Korean |
 | --- | --- | --- |
 | Setup.Title | Log settings | 로그 설정 |
-| Setup.Intro | Kindly Bartender tells you when hero selection or a Recruit phase starts while you’re in another window. It reads Hearthstone’s log, which Hearthstone writes only after two of its settings files are changed. | Kindly Bartender는 다른 창을 보고 있을 때 영웅 선택이나 상점 단계가 시작되면 알려 줍니다. 이를 위해 하스스톤 로그를 읽는데, 하스스톤은 설정 파일 두 개를 바꿔야 로그를 남깁니다. |
+| Setup.Intro | Kindly Bartender tells you when hero selection or a Recruit phase starts while you’re in another window. It reads Hearthstone’s log, which Hearthstone writes only after two of its settings files are changed. | Kindly Bartender는 다른 창을 보고 있을 때 영웅 선택이나 상점 단계가 시작되면 알려 줍니다. 하스스톤 로그를 읽어 단계를 확인하는데, 이 로그는 설정 파일 두 개를 바꿔야 기록됩니다. |
 | Setup.Files.Heading | Files that will change | 바뀌는 파일 |
 | Setup.Files.LogConfig | {0}: turns on the game log | {0}: 게임 로그를 켭니다 |
 | Setup.Files.ClientConfig | {0}: removes the log size limit | {0}: 로그 크기 제한을 없앱니다 |
@@ -92,7 +92,7 @@ IDs match the resource keys. `{0}` is a value filled in by the app.
 | Setup.Options.Heading | Options | 옵션 |
 | Setup.StartWithWindows | Start Kindly Bartender with Windows | Windows 시작 시 Kindly Bartender 실행 |
 | Setup.BringToFront | Bring Hearthstone to the front when a phase starts | 단계가 시작되면 하스스톤 화면을 앞으로 가져오기 |
-| Setup.BringToFront.Note | Your typing stays in the window you’re using. | 키보드 입력은 지금 쓰는 창에 그대로 남습니다. |
+| Setup.BringToFront.Note | Your typing stays in the window you’re using. | 키보드 입력은 지금 쓰던 창으로 계속 들어갑니다. |
 | Setup.DoNotDisturb | When Windows Do not disturb is on, notifications may be hidden. To let them through, add Kindly Bartender to priority notifications in Windows settings. | Windows 방해 금지가 켜져 있으면 알림이 숨겨질 수 있습니다. 알림을 받으려면 Windows 설정에서 Kindly Bartender를 우선순위 알림에 추가하세요. |
 | Setup.Button.SetUp | Agree and set up | 동의하고 설정하기 |
 | Setup.Button.Close | Close | 닫기 |
@@ -138,9 +138,9 @@ IDs match the resource keys. `{0}` is a value filled in by the app.
 | About.Unofficial | Kindly Bartender is an unofficial fan project and is not affiliated with or endorsed by Blizzard Entertainment. Hearthstone is a trademark of Blizzard Entertainment, Inc. | Kindly Bartender는 비공식 팬 프로젝트이며, 블리자드 엔터테인먼트와 제휴하지 않았고 보증도 받지 않았습니다. Hearthstone은 Blizzard Entertainment, Inc.의 상표입니다. |
 | About.Risk | Blizzard’s End User License Agreement forbids programs it hasn’t authorized from reading game data, and Blizzard could take action against your account. Use Kindly Bartender at your own risk. | 블리자드 엔터테인먼트 최종 사용자 사용권 계약은 허가받지 않은 프로그램이 게임 데이터를 읽는 것을 금지하며, 블리자드가 계정에 제재를 가할 수 있습니다. 사용에 따른 책임은 사용자에게 있습니다. |
 | About.Files.Heading | What Kindly Bartender reads and changes | Kindly Bartender가 읽고 바꾸는 것 |
-| About.Files.Body | It reads Hearthstone’s Power.log while the game runs. After you agree, it changes log settings in two files: {0}, {1}. Uninstalling doesn’t undo these changes, because other tools may use them. To undo them, delete the [Power] section from the first file and the FileSizeLimit.Int line from the second. | 게임이 실행되는 동안 하스스톤의 Power.log를 읽습니다. 동의하면 다음 두 파일의 로그 설정을 바꿉니다: {0}, {1}. 다른 도구가 쓸 수 있어 제거해도 이 변경은 되돌리지 않습니다. 되돌리려면 첫 번째 파일의 [Power] 구역과 두 번째 파일의 FileSizeLimit.Int 줄을 지우세요. |
+| About.Files.Body | It reads Hearthstone’s Power.log while the game runs. After you agree, it changes log settings in two files: {0}, {1}. Uninstalling doesn’t undo these changes, because other tools may use them. To undo them, delete the [Power] section from the first file and the FileSizeLimit.Int line from the second. | 게임이 실행되는 동안 하스스톤의 Power.log를 읽습니다. 동의하면 다음 두 파일의 로그 설정을 바꿉니다: {0}, {1}. 다른 도구도 이 설정을 쓸 수 있으므로 앱을 제거해도 되돌리지 않습니다. 되돌리려면 첫 번째 파일의 [Power] 섹션과 두 번째 파일의 FileSizeLimit.Int 줄을 지우세요. |
 | About.Privacy.Heading | Privacy | 개인정보 |
-| About.Privacy.Body | Kindly Bartender collects no personal data and sends nothing about you or your games. At startup it checks GitHub for a new version, so GitHub sees your IP address, as with any web request. | Kindly Bartender는 개인정보를 수집하지 않으며 사용자나 게임에 관한 정보를 보내지 않습니다. 시작할 때 GitHub에서 새 버전을 확인하므로, 다른 웹 요청과 마찬가지로 IP 주소가 GitHub에 전달됩니다. |
+| About.Privacy.Body | Kindly Bartender collects no personal data and sends nothing about you or your games. At startup it checks GitHub for a new version, so GitHub sees your IP address and the app version, as with any web request. | Kindly Bartender는 개인정보를 수집하지 않으며 사용자나 게임에 관한 정보를 보내지 않습니다. 시작할 때 GitHub에서 새 버전을 확인하므로, 다른 웹 요청과 마찬가지로 IP 주소와 앱 버전이 GitHub에 전달됩니다. |
 | About.License | License: MIT | 라이선스: MIT |
 | About.ThirdParty | Third-party notices | 제3자 고지 |
 | About.Feedback | Report a problem | 문제 신고 |

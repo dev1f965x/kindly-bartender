@@ -8,7 +8,7 @@ namespace KindlyBartender.App.Views;
 
 /// <summary>
 /// Opens links and the app's own files. Only the repository's pages and the Windows notification settings are
-/// opened as links (Design Doc, Security), so no text from a response or file can choose what opens.
+/// opened as links, so no text from a response or file can choose what opens.
 /// </summary>
 internal static class Links
 {

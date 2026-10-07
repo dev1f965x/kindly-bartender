@@ -3,7 +3,7 @@ using Microsoft.Win32;
 
 namespace KindlyBartender.App.Hearthstone;
 
-/// <summary>Finds the Hearthstone install folder (PRD FR1).</summary>
+/// <summary>Finds the Hearthstone install folder.</summary>
 internal static class InstallLocator
 {
     private const string UninstallKey = @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Hearthstone";

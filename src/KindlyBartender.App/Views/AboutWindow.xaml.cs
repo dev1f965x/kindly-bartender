@@ -6,7 +6,7 @@ using KindlyBartender.Core.Configuration;
 
 namespace KindlyBartender.App.Views;
 
-/// <summary>Version, the unofficial notice and risk, what the app reads and changes, privacy, and links (PRD FR26).</summary>
+/// <summary>Version, the unofficial notice and risk, what the app reads and changes, privacy, and links.</summary>
 internal sealed partial class AboutWindow : Window
 {
     /// <summary>Generated at release next to the executable.</summary>
@@ -23,7 +23,7 @@ internal sealed partial class AboutWindow : Window
         RiskText.Text = Strings.Get("About.Risk");
         FilesHeading.Text = Strings.Get("About.Files.Heading");
         var clientConfig = shell.InstallFolder is { } folder ? HearthstoneConfig.ClientConfigPath(folder) : "client.config";
-        PathText.Fill(FilesText, Strings.Get("About.Files.Body"), SetupWindow.LogConfigDisplayPath, clientConfig);
+        PathText.Fill(FilesText, Strings.Get("About.Files.Body"), [SetupWindow.LogConfigDisplayPath, clientConfig], "[Power]", "FileSizeLimit.Int");
         PrivacyHeading.Text = Strings.Get("About.Privacy.Heading");
         PrivacyText.Text = Strings.Get("About.Privacy.Body");
         CloseButton.Content = Strings.Get("Setup.Button.Close");

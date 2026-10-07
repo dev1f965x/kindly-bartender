@@ -38,7 +38,6 @@ public interface IMonotonicClock
 
 /// <summary>
 /// Follows one Battlegrounds game through its phases from Power.log events and reports phase starts.
-/// See "Design Doc: First Release", section Game tracker.
 /// </summary>
 public sealed class GameTracker(IMonotonicClock clock)
 {

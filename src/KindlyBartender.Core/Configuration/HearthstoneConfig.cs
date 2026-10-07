@@ -1,6 +1,6 @@
 namespace KindlyBartender.Core.Configuration;
 
-/// <summary>The two Hearthstone files that must be set up for detection (Design Doc, Configuration files).</summary>
+/// <summary>The two Hearthstone files that must be set up for detection.</summary>
 public static class HearthstoneConfig
 {
     /// <summary>

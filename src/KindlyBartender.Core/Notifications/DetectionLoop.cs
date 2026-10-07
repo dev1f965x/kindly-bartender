@@ -17,7 +17,7 @@ public sealed class DetectionLoop(LogMonitor monitor, GameTracker tracker, Notif
     private int _pollFailures;
     private string? _lastPollError;
 
-    /// <summary>Raised when detection stops working, so the player can be told (PRD FR15).</summary>
+    /// <summary>Raised when detection stops working, so the player can be told.</summary>
     public event Action<DetectionFailure>? Failing;
 
     public bool IsFailing => tracker.IsFailing || _pollFailures >= PollFailureLimit;

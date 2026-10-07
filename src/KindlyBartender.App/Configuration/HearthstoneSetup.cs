@@ -24,7 +24,7 @@ public enum SetupResult
     Failed,
 }
 
-/// <summary>Checks and fixes log.config and client.config (PRD FR2 to FR5).</summary>
+/// <summary>Checks and fixes log.config and client.config.</summary>
 internal static class HearthstoneSetup
 {
     /// <summary>The command-line switch for the elevated copy of the app.</summary>

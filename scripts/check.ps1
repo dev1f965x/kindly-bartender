@@ -22,7 +22,7 @@ try {
     # Restore runs NuGet audit; high and critical advisories fail here (Directory.Build.props).
     Invoke-Step 'Build' { dotnet build $solution --configuration Release }
     Invoke-Step 'Test' { dotnet test --solution $solution --configuration Release --no-build }
-    # Test-only packages are held to the shipped-code list too, which is stricter than the handbook requires.
+    # Test-only packages are held to the shipped-code list too.
     Invoke-Step 'Licenses' {
         dotnet nuget-license --input $solution --include-transitive `
             --allowed-license-types (Join-Path $PSScriptRoot 'allowed-licenses.json')

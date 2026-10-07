@@ -11,7 +11,7 @@ How Kindly Bartender looks. The app is a small Windows utility: it should look l
 
 ## Tokens
 
-Colors come from the Fluent theme's resources (`TextFillColorPrimaryBrush`, `TextFillColorSecondaryBrush`, `CardBackgroundFillColorDefaultBrush`, `SystemFillColorCautionBrush`, `AccentFillColorDefaultBrush`), always referenced with `DynamicResource` so that light, dark, and contrast themes switch while the app runs. The app defines no colors of its own. Resource keys are confirmed against the .NET 10 Fluent theme when the windows are built; a missing key is replaced by the nearest theme key and recorded here.
+Colors come from the Fluent theme's resources (`TextFillColorPrimaryBrush`, `TextFillColorSecondaryBrush`, `CardBackgroundFillColorDefaultBrush`, `SystemFillColorCautionBrush`, `AccentFillColorDefaultBrush`), always referenced with `DynamicResource` so that light, dark, and contrast themes switch while the app runs. The app defines no colors of its own. All of these keys exist in the .NET 10 Fluent theme.
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -55,5 +55,4 @@ Sizes are in device-independent pixels and scale with the Windows text size sett
 - Wireframe toggles are built as check boxes: the WPF Fluent theme in .NET 10 has no toggle switch control, and a check box is the standard Windows control for an on/off option in a dialog.
 - `KB_SCREENSHOTS=<folder> dotnet test --project tests/KindlyBartender.App.Tests -- --filter-class KindlyBartender.App.Tests.Views.WindowScreenshots` renders each window in English and Korean, light and dark, into the folder; the images in `design/screenshots` come from it. The system backdrop is replaced by the theme's base fill in the images.
 - The 200% text size and contrast theme checks are done by hand during acceptance testing, because they need the Windows setting changed.
-- Screenshots of each window in every state, in English and Korean, in light and dark mode, at 100% and 200% text size, are attached to the pull request that builds the window.
-- A separate review compares each window with the wireframes and this file before the owner's review.
+- When a window changes, its screenshots are rendered again and attached to the pull request.

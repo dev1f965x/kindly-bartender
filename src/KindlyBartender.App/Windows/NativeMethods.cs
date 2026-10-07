@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace KindlyBartender.App.Windows;
 
-/// <summary>The Win32 calls the app needs, in one place.</summary>
 internal static partial class NativeMethods
 {
     public const int SwShowNoActivate = 4;
