@@ -28,6 +28,7 @@ try {
             --allowed-license-types (Join-Path $PSScriptRoot 'allowed-licenses.json')
     }
     Invoke-Step 'Game logs' { & (Join-Path $PSScriptRoot 'Test-NoGameLogs.ps1') }
+    Invoke-Step 'UI strings' { & (Join-Path $PSScriptRoot 'Test-Content.ps1') }
 }
 finally {
     Pop-Location
