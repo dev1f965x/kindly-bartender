@@ -10,14 +10,20 @@ public sealed record HearthstoneProcess(int Id, DateTime StartTimeLocal);
 
 public interface IHearthstoneProcessProbe
 {
-    /// <summary>Returns the running Hearthstone process, or null.</summary>
+    /// <summary>Returns the running Hearthstone process, the newest if there are several, or null.</summary>
     HearthstoneProcess? Find();
 }
 
 /// <summary>
 /// Connects the running Hearthstone session's Power.log to a <see cref="GameTracker"/>. Call
-/// <see cref="Poll"/> often (every 250 ms); it checks for the process at most every 2 seconds.
+/// <see cref="Poll"/> often (every 250 ms) from one thread; it looks for the process and the log at most
+/// every 2 seconds and reads new lines on every call.
 /// </summary>
+/// <remarks>
+/// File system errors are reported through <see cref="Error"/> and retried on a later poll; they never escape
+/// <see cref="Poll"/>. A time zone change while Hearthstone runs can move its folder name outside the start
+/// tolerance; detection then fails visibly through the tracker's deadline.
+/// </remarks>
 public sealed class LogMonitor(
     IHearthstoneProcessProbe processProbe,
     Func<string?> installFolder,
@@ -28,11 +34,12 @@ public sealed class LogMonitor(
 
     private readonly List<string> _lines = [];
     private readonly PowerLogParser _parser = new();
-    private TimeSpan? _lastProcessCheck;
+    private TimeSpan? _lastCheck;
     private HearthstoneProcess? _process;
     private string? _folder;
     private LogTailer? _tailer;
     private int _reportedSkippedLines;
+    private bool _readErrorReported;
 
     /// <summary>Raised when a Hearthstone process is first seen; the configuration files are checked then.</summary>
     public event Action<HearthstoneProcess>? HearthstoneStarted;
@@ -42,26 +49,23 @@ public sealed class LogMonitor(
     /// <summary>Raised with the number of over-long lines dropped since the last time it was raised.</summary>
     public event Action<int>? LinesSkipped;
 
+    /// <summary>Raised with what failed and the error, for the diagnostic log. Repeated read errors are reported once.</summary>
+    public event Action<string, Exception>? Error;
+
     public HearthstoneProcess? Process => _process;
 
     public IReadOnlyList<TrackerOutput> Poll()
     {
         var outputs = new List<TrackerOutput>();
 
-        if (_lastProcessCheck is null || clock.Now - _lastProcessCheck >= ProcessCheckInterval)
+        if (_lastCheck is null || clock.Now - _lastCheck >= ProcessCheckInterval)
         {
-            _lastProcessCheck = clock.Now;
+            _lastCheck = clock.Now;
             CheckProcess();
-        }
-
-        if (_process is null)
-        {
-            return outputs;
-        }
-
-        if (_tailer is null)
-        {
-            Attach();
+            if (_process is not null && _tailer is null)
+            {
+                Attach();
+            }
         }
 
         if (_tailer is not null)
@@ -80,56 +84,53 @@ public sealed class LogMonitor(
     private void CheckProcess()
     {
         var found = processProbe.Find();
-        if (found is null)
+        if (found == _process)
         {
-            if (_process is not null)
+            // A newer folder in the same process would mean Hearthstone restarted its logging; follow it.
+            if (_folder is not null && FindSessionFolder() is { } newest && newest != _folder)
             {
                 Detach();
-                _process = null;
-                HearthstoneExited?.Invoke();
             }
 
             return;
         }
 
-        if (found != _process)
+        if (_process is not null)
         {
             Detach();
-            _process = found;
-            HearthstoneStarted?.Invoke(found);
-            return;
+            _process = null;
+            HearthstoneExited?.Invoke();
         }
 
-        // A newer folder in the same process would mean Hearthstone restarted its logging; follow it.
-        if (_folder is not null && FindSessionFolder() is { } newest && newest != _folder)
+        if (found is not null)
         {
-            Detach();
+            _process = found;
+            HearthstoneStarted?.Invoke(found);
         }
     }
 
     private string? FindSessionFolder()
     {
-        if (_process is null || installFolder() is not { } install)
-        {
-            return null;
-        }
-
-        var logs = Path.Combine(install, "Logs");
-        if (!Directory.Exists(logs))
+        if (_process is null)
         {
             return null;
         }
 
         try
         {
-            return SessionLogFolder.Select(Directory.EnumerateDirectories(logs), _process.StartTimeLocal);
+            if (installFolder() is not { } install)
+            {
+                return null;
+            }
+
+            var logs = Path.Combine(install, "Logs");
+            return Directory.Exists(logs)
+                ? SessionLogFolder.Select(Directory.EnumerateDirectories(logs), _process.StartTimeLocal)
+                : null;
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
-        {
+            Error?.Invoke("Find the log folder", e);
             return null;
         }
     }
@@ -148,18 +149,27 @@ public sealed class LogMonitor(
             return;
         }
 
+        StartTailing(path);
+    }
+
+    /// <summary>Starts reading at the last game in the file and rebuilds the tracker from there without reports.</summary>
+    private void StartTailing(string path)
+    {
         long start;
         try
         {
             start = LastGameFinder.FindStartOffset(path);
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
+            Error?.Invoke("Find the last game in Power.log", e);
+            _tailer = null;
             return;
         }
 
         _tailer = new LogTailer(path, start);
         _reportedSkippedLines = 0;
+        _readErrorReported = false;
         tracker.BeginRebuild();
     }
 
@@ -167,16 +177,7 @@ public sealed class LogMonitor(
     {
         var tailer = _tailer!;
         _lines.Clear();
-        TailResult result;
-        try
-        {
-            result = tailer.ReadNewLines(_lines);
-        }
-        catch (IOException)
-        {
-            // Hearthstone may hold the file briefly; the next poll tries again.
-            return;
-        }
+        var result = tailer.ReadNewLines(_lines);
 
         foreach (var line in _lines)
         {
@@ -184,11 +185,6 @@ public sealed class LogMonitor(
             {
                 outputs.Add(output);
             }
-        }
-
-        if (tracker.Rebuilding)
-        {
-            tracker.EndRebuild();
         }
 
         if (tailer.SkippedLines > _reportedSkippedLines)
@@ -199,18 +195,31 @@ public sealed class LogMonitor(
 
         switch (result)
         {
+            case TailResult.Read:
+                _readErrorReported = false;
+                if (tracker.Rebuilding)
+                {
+                    tracker.EndRebuild();
+                }
+
+                break;
+            case TailResult.Unavailable:
+                // Hearthstone may hold the file briefly; the next poll continues where this one stopped.
+                if (!_readErrorReported && tailer.LastError is { } error)
+                {
+                    Error?.Invoke("Read Power.log", error);
+                    _readErrorReported = true;
+                }
+
+                break;
             case TailResult.Truncated:
-                // The file was replaced; read the new one from its start, rebuilding silently.
+                // The file was replaced; read the new one from its last game, rebuilding silently.
                 tracker.Reset();
-                _tailer = new LogTailer(tailer.Path);
-                _reportedSkippedLines = 0;
-                tracker.BeginRebuild();
+                StartTailing(tailer.Path);
                 break;
             case TailResult.Missing:
-                Detach();
-                break;
-            case TailResult.Read:
             default:
+                Detach();
                 break;
         }
     }

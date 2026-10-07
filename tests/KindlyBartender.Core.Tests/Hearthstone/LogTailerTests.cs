@@ -107,6 +107,52 @@ public sealed class LogTailerTests : IDisposable
     }
 
     [Fact]
+    public void Over_long_line_and_a_normal_line_in_one_write()
+    {
+        var tailer = new LogTailer(_path);
+        Append(new string('x', LogTailer.MaxLineLength + 1) + "\nnext\n");
+
+        Assert.Equal(["next"], Read(tailer));
+        Assert.Equal(1, tailer.SkippedLines);
+    }
+
+    [Fact]
+    public void Carriage_return_and_line_feed_split_across_read_chunks()
+    {
+        var tailer = new LogTailer(_path);
+        // The reader works in 16 KB chunks; put the \r last in the first chunk and the \n first in the second.
+        var first = new string('a', (16 * 1024) - 1);
+        Append(first + "\r\nsecond\n");
+
+        Assert.Equal([first, "second"], Read(tailer));
+    }
+
+    [Fact]
+    public void Many_chunks_written_between_reads_are_all_returned()
+    {
+        var tailer = new LogTailer(_path);
+        var lines = Enumerable.Range(0, 5_000).Select(i => $"line {i} {new string('z', 40)}").ToList();
+        Append(string.Concat(lines.Select(l => l + "\n")));
+
+        Assert.Equal(lines, Read(tailer));
+    }
+
+    [Fact]
+    public void File_held_exclusively_is_unavailable_and_read_later()
+    {
+        var tailer = new LogTailer(_path);
+        Append("line\n");
+
+        using (new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            Read(tailer, TailResult.Unavailable);
+            Assert.NotNull(tailer.LastError);
+        }
+
+        Assert.Equal(["line"], Read(tailer));
+    }
+
+    [Fact]
     public void File_deleted_while_tailing_is_reported_as_missing()
     {
         var tailer = new LogTailer(_path);

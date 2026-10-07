@@ -10,8 +10,14 @@ public enum TailResult
     /// <summary>The file does not exist yet, or no longer exists.</summary>
     Missing,
 
-    /// <summary>The file is now shorter than what was read; it was replaced and must be read again from the start.</summary>
+    /// <summary>The file is now shorter than what was read; it was replaced and must be read again.</summary>
     Truncated,
+
+    /// <summary>
+    /// The file could not be opened or read this time, for example while another process holds it exclusively.
+    /// Lines read before the error were still returned; the next call continues from there.
+    /// </summary>
+    Unavailable,
 }
 
 /// <summary>
@@ -20,18 +26,25 @@ public enum TailResult
 /// </summary>
 /// <remarks>
 /// The file is opened for each read with full sharing, so Hearthstone can keep writing, rename, or delete it.
+/// A replacement is noticed only when it is shorter than what was already read. Not thread-safe.
 /// </remarks>
 public sealed class LogTailer(string path, long startOffset = 0)
 {
-    /// <summary>Lines longer than this are dropped; Power.log lines are far shorter, so such a line is not one to parse.</summary>
+    /// <summary>
+    /// Lines longer than this many characters, counting a trailing carriage return, are dropped; Power.log lines
+    /// are far shorter, so such a line is not one to parse.
+    /// </summary>
     public const int MaxLineLength = 64 * 1024;
 
-    private const int ChunkSize = 64 * 1024;
+    // Small enough that the buffers stay off the large object heap.
+    private const int ChunkSize = 16 * 1024;
 
     private static readonly UTF8Encoding Utf8 = new(encoderShouldEmitUTF8Identifier: false);
 
     private readonly Decoder _decoder = Utf8.GetDecoder();
     private readonly StringBuilder _partial = new();
+    private readonly byte[] _bytes = new byte[ChunkSize];
+    private readonly char[] _chars = new char[Utf8.GetMaxCharCount(ChunkSize)];
     private bool _skippingLongLine;
 
     public string Path { get; } = path;
@@ -41,6 +54,9 @@ public sealed class LogTailer(string path, long startOffset = 0)
     /// <summary>The number of over-long lines dropped so far.</summary>
     public int SkippedLines { get; private set; }
 
+    /// <summary>The error behind the last <see cref="TailResult.Unavailable"/>, for the diagnostic log.</summary>
+    public Exception? LastError { get; private set; }
+
     /// <summary>Appends the complete lines written since the last call to <paramref name="lines"/>.</summary>
     public TailResult ReadNewLines(ICollection<string> lines)
     {
@@ -49,31 +65,39 @@ public sealed class LogTailer(string path, long startOffset = 0)
         {
             stream = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, bufferSize: 1);
         }
-        catch (FileNotFoundException)
+        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
             return TailResult.Missing;
         }
-        catch (DirectoryNotFoundException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            return TailResult.Missing;
+            LastError = e;
+            return TailResult.Unavailable;
         }
 
         using (stream)
         {
-            if (stream.Length < Position)
+            try
             {
-                return TailResult.Truncated;
-            }
+                if (stream.Length < Position)
+                {
+                    return TailResult.Truncated;
+                }
 
-            stream.Position = Position;
-            var bytes = new byte[ChunkSize];
-            var chars = new char[Utf8.GetMaxCharCount(ChunkSize)];
-            int read;
-            while ((read = stream.Read(bytes, 0, bytes.Length)) > 0)
+                stream.Position = Position;
+                int read;
+                while ((read = stream.Read(_bytes, 0, _bytes.Length)) > 0)
+                {
+                    Position += read;
+                    var count = _decoder.GetChars(_bytes, 0, read, _chars, 0);
+                    Split(_chars.AsSpan(0, count), lines);
+                }
+            }
+            catch (IOException e)
             {
-                Position += read;
-                var count = _decoder.GetChars(bytes, 0, read, chars, 0);
-                Split(chars.AsSpan(0, count), lines);
+                // Lines already added stay with the caller, and Position matches them.
+                LastError = e;
+                return TailResult.Unavailable;
             }
         }
 

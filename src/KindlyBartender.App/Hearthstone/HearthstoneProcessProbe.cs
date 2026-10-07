@@ -14,11 +14,17 @@ internal sealed class HearthstoneProcessProbe : IHearthstoneProcessProbe
         var processes = Process.GetProcessesByName(ProcessName);
         try
         {
+            HearthstoneProcess? newest = null;
             foreach (var process in processes)
             {
                 try
                 {
-                    return new HearthstoneProcess(process.Id, process.StartTime);
+                    // The order of the list is not stable; picking the newest keeps the answer steady.
+                    var found = new HearthstoneProcess(process.Id, process.StartTime);
+                    if (newest is null || found.StartTimeLocal > newest.StartTimeLocal)
+                    {
+                        newest = found;
+                    }
                 }
                 catch (Exception e) when (e is Win32Exception or InvalidOperationException)
                 {
@@ -26,7 +32,7 @@ internal sealed class HearthstoneProcessProbe : IHearthstoneProcessProbe
                 }
             }
 
-            return null;
+            return newest;
         }
         finally
         {

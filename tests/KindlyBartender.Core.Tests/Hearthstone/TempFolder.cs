@@ -17,11 +17,17 @@ internal sealed class TempFolder : IDisposable
     {
         try
         {
+            // Tests may leave read-only files behind; Directory.Delete refuses those.
+            foreach (var file in Directory.EnumerateFiles(Path, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
             Directory.Delete(Path, recursive: true);
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            // A file may still be open in a failed test; the temp folder is cleaned by Windows eventually.
+            // A file may still be open, for example held by an antivirus scan; the temp folder is cleaned eventually.
         }
     }
 }
