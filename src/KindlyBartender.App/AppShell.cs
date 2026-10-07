@@ -254,7 +254,7 @@ internal sealed class AppShell : IDisposable
             // A defect in detection must not end the app. It is logged when it changes, not every 250 ms, and
             // repeated failures show as Not working (PRD FR15).
             _pollFailures++;
-            var error = $"{e.GetType().FullName}: {e.Message}";
+            var error = $"{e.GetType().FullName}:{e.HResult}";
             if (error != _lastPollError)
             {
                 _lastPollError = error;

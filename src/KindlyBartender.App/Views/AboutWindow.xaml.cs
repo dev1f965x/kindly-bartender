@@ -32,17 +32,13 @@ internal sealed partial class AboutWindow : Window
         var notices = Path.Combine(AppContext.BaseDirectory, ThirdPartyNoticesFile);
         if (File.Exists(notices))
         {
-            AddLink(Strings.Get("About.ThirdParty"), () => Links.Reveal(notices));
+            AddLink(Strings.Get("About.ThirdParty"), () => Links.OpenLocal(notices));
         }
 
         AddLink(Strings.Get("About.Feedback"), () => Links.Open(Links.Issues));
 
         var openLog = new Button { Content = Strings.Get("About.DiagnosticLog"), HorizontalAlignment = HorizontalAlignment.Left };
-        openLog.Click += (_, _) =>
-        {
-            Directory.CreateDirectory(DiagnosticLog.Folder);
-            Links.Reveal(DiagnosticLog.Folder);
-        };
+        openLog.Click += (_, _) => Links.OpenLocal(DiagnosticLog.Folder);
         DiagnosticsPanel.Children.Add(openLog);
         DiagnosticsPanel.Children.Add(new TextBlock { Text = Strings.Get("About.DiagnosticLog.Note"), Style = (Style)FindResource("CaptionText") });
     }

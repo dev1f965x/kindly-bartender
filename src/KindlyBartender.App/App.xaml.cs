@@ -44,8 +44,9 @@ public partial class App : Application
         DiagnosticLog.Write(LogEvent.AppStarted);
         DispatcherUnhandledException += OnUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
-            DiagnosticLog.Error(LogEvent.BackgroundThreadError, args.ExceptionObject as Exception ?? new InvalidOperationException());
-        TaskScheduler.UnobservedTaskException += (_, args) => DiagnosticLog.Error(LogEvent.UnobservedTaskError, args.Exception);
+            DiagnosticLog.Error(LogEvent.BackgroundThreadError, (args.ExceptionObject as Exception)?.GetBaseException() ?? new InvalidOperationException());
+        // The innermost exception says what failed; the wrappers are always the same types.
+        TaskScheduler.UnobservedTaskException += (_, args) => DiagnosticLog.Error(LogEvent.UnobservedTaskError, args.Exception.GetBaseException());
 
         // Before the tray icon exists, so it and the notifications carry the app ID.
         AppIdentity.Register("Kindly Bartender", iconPath: null);
@@ -63,15 +64,24 @@ public partial class App : Application
     /// <summary>Adds the download item to the tray menu and a notice to About when a newer release exists.</summary>
     private static async Task ShowUpdateIfAvailableAsync(AppShell shell, WindowHost windows)
     {
-        var version = typeof(App).Assembly.GetName().Version ?? new Version(0, 0, 0);
-        if (await UpdateChecker.CheckAsync(version).ConfigureAwait(true) is not { } update)
+        try
         {
-            return;
-        }
+            var version = typeof(App).Assembly.GetName().Version ?? new Version(0, 0, 0);
+            if (await UpdateChecker.CheckAsync(version).ConfigureAwait(true) is not { } update)
+            {
+                return;
+            }
 
-        void OpenPage() => Links.Open(update.PageUrl.AbsoluteUri);
-        shell.UpdateMenuItems = () => [new System.Windows.Forms.ToolStripMenuItem(Strings.Format("Tray.Menu.Update", update.Version), null, (_, _) => OpenPage())];
-        windows.AboutOpened += about => about.ShowUpdate(update.Version, OpenPage);
+            void OpenPage() => Links.Open(update.PageUrl.AbsoluteUri);
+            shell.UpdateMenuItems = () => [new System.Windows.Forms.ToolStripMenuItem(Strings.Format("Tray.Menu.Update", update.Version), null, (_, _) => OpenPage())];
+            windows.AboutOpened += about => about.ShowUpdate(update.Version, OpenPage);
+            windows.OpenAbout?.ShowUpdate(update.Version, OpenPage);
+        }
+        catch (Exception e)
+        {
+            // This task is not awaited, so an error here is logged rather than left unobserved.
+            DiagnosticLog.Error(LogEvent.UpdateCheckFailed, e);
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -88,5 +98,5 @@ public partial class App : Application
 
     // Logged so the player can report it; the app still ends, because its state is unknown.
     private static void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e) =>
-        DiagnosticLog.Error(LogEvent.UnexpectedError, e.Exception);
+        DiagnosticLog.Error(LogEvent.UnexpectedError, e.Exception.GetBaseException());
 }

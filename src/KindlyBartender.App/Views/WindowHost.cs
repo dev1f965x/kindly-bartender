@@ -41,6 +41,9 @@ internal sealed class WindowHost(AppShell shell)
         window.Activate();
     }
 
+    /// <summary>The About window, if it is open.</summary>
+    public AboutWindow? OpenAbout => _open.GetValueOrDefault(AppWindow.About) as AboutWindow;
+
     public void CloseAll()
     {
         foreach (var window in _open.Values.ToList())

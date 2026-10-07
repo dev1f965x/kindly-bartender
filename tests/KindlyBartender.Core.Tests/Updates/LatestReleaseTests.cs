@@ -23,6 +23,7 @@ public class LatestReleaseTests
     [InlineData("v0.1.0")]
     [InlineData("v0.1")]
     [InlineData("v0.0.9")]
+    [InlineData("V0.1.0")]
     public void Same_or_older_release_is_not_an_update(string tag)
     {
         Assert.Null(LatestRelease.FindNewer(Release(tag), Current));
@@ -48,6 +49,7 @@ public class LatestReleaseTests
     [InlineData("")]
     [InlineData("not json")]
     [InlineData("[]")]
+    [InlineData("""{ "tag_name": "v0.2.0-beta", "html_url": "https://github.com/dev1f965x/kindly-bartender/releases/tag/v0.2.0-beta" }""")]
     [InlineData("""{ "message": "Not Found" }""")]
     [InlineData("""{ "tag_name": "latest", "html_url": "https://github.com/dev1f965x/kindly-bartender/releases/tag/latest" }""")]
     public void Unreadable_responses_are_no_update(string json)

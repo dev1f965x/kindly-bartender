@@ -17,4 +17,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Windows notifications, sound, taskbar flashing, showing Hearthstone in front without taking focus, and a Do not disturb check.
 - Tray icon and menu, one copy per user, settings file, start with Windows, Korean and English UI text generated from CONTENT.md, and the notification rules.
 - Log settings, Settings, and About windows in the Windows 11 style, with light and dark themes and Korean and English text.
-- Diagnostic log with daily files and no free text, an update check against GitHub Releases, and a version number (0.1.0).
+- Diagnostic log with daily files and no free text, and an update check against GitHub Releases.

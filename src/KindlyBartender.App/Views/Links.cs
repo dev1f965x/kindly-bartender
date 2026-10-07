@@ -16,6 +16,8 @@ internal static class Links
     public const string Repository = "https://github.com/dev1f965x/kindly-bartender";
     public const string Issues = Repository + "/issues/new/choose";
 
+    private const string RepositoryPath = "/dev1f965x/kindly-bartender";
+
     public static TextBlock Create(string text, Action onClick)
     {
         var link = new Hyperlink(new Run(text));
@@ -25,8 +27,21 @@ internal static class Links
 
     public static TextBlock Create(string text, string target) => Create(text, () => Open(target));
 
-    public static bool IsAllowed(string target) =>
-        target == NotificationSettings || target == Repository || target.StartsWith(Repository + "/", StringComparison.Ordinal);
+    /// <summary>Checks the normalized address, so "..", case, or escapes cannot leave the repository.</summary>
+    public static bool IsAllowed(string target)
+    {
+        if (target == NotificationSettings)
+        {
+            return true;
+        }
+
+        return Uri.TryCreate(target, UriKind.Absolute, out var uri)
+            && uri.Scheme == Uri.UriSchemeHttps
+            && uri.IsDefaultPort
+            && string.IsNullOrEmpty(uri.UserInfo)
+            && uri.Host == "github.com"
+            && (uri.AbsolutePath == RepositoryPath || uri.AbsolutePath.StartsWith(RepositoryPath + "/", StringComparison.Ordinal));
+    }
 
     public static void Open(string target)
     {
@@ -36,18 +51,36 @@ internal static class Links
             return;
         }
 
-        Start(new ProcessStartInfo(target) { UseShellExecute = true });
+        Start(target);
     }
 
-    /// <summary>Shows a file or folder of the app's own in File Explorer.</summary>
-    public static void Reveal(string path) =>
-        Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { Directory.Exists(path) ? path : $"/select,{path}" } });
-
-    private static void Start(ProcessStartInfo info)
+    /// <summary>
+    /// Opens one of the app's own files or folders with its default program, such as Notepad or File Explorer. A
+    /// missing folder is created first, so the diagnostic log folder opens even before anything was logged.
+    /// </summary>
+    public static void OpenLocal(string path)
     {
         try
         {
-            using var _ = Process.Start(info);
+            if (!File.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            DiagnosticLog.Error(LogEvent.OpenLinkFailed, e);
+            return;
+        }
+
+        Start(path);
+    }
+
+    private static void Start(string target)
+    {
+        try
+        {
+            using var _ = Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
         }
         catch (System.ComponentModel.Win32Exception e)
         {

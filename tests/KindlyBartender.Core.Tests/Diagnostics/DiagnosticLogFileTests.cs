@@ -80,15 +80,43 @@ public sealed class DiagnosticLogFileTests : IDisposable
         var log = Log;
         for (var i = 0; i < 40_000; i++)
         {
+            // Long and short lines mixed, so a short line could still fit after a long one did not.
             log.Write(LogEvent.ReadPowerLogFailed, new IOException());
+            log.Write(LogEvent.AppStarted);
         }
 
         var path = Path.Combine(_folder, "2026-10-07.log");
+        var lines = File.ReadAllLines(path);
         Assert.True(new FileInfo(path).Length <= DiagnosticLogFile.MaxFileBytes);
-        Assert.EndsWith("LogFull", File.ReadAllLines(path)[^1], StringComparison.Ordinal);
+        Assert.EndsWith("LogFull", lines[^1], StringComparison.Ordinal);
+        Assert.Single(lines, l => l.EndsWith("LogFull", StringComparison.Ordinal));
 
         var before = new FileInfo(path).Length;
         new DiagnosticLogFile(_folder, () => _now).Write(LogEvent.AppStarted);
         Assert.Equal(before, new FileInfo(path).Length);
+    }
+
+    [Fact]
+    public void Other_files_and_future_dates_are_handled()
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(Path.Combine(_folder, "notes.log"), "kept");
+        File.WriteAllText(Path.Combine(_folder, "2026-99-99.log"), "kept");
+        for (var day = 1; day <= 6; day++)
+        {
+            File.WriteAllText(Path.Combine(_folder, $"2026-09-{day:00}.log"), "old");
+        }
+
+        File.WriteAllText(Path.Combine(_folder, "2027-01-01.log"), "future");
+
+        Log.Write(LogEvent.AppStarted);
+
+        var names = Directory.GetFiles(_folder).Select(f => Path.GetFileName(f)).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("notes.log", names);
+        Assert.Contains("2026-99-99.log", names);
+        Assert.Contains("2027-01-01.log", names);
+        Assert.Contains("2026-10-07.log", names);
+        Assert.DoesNotContain("2026-09-01.log", names);
+        Assert.Equal(DiagnosticLogFile.MaxFiles, names.Count(n => n.StartsWith("202", StringComparison.Ordinal) && n != "2026-99-99.log"));
     }
 }

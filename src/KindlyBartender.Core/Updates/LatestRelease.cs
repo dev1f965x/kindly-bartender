@@ -35,7 +35,7 @@ public static class LatestRelease
                 return null;
             }
 
-            var versionText = tagName.StartsWith('v') ? tagName[1..] : tagName;
+            var versionText = tagName.TrimStart('v', 'V');
             if (!System.Version.TryParse(versionText, out var version)
                 || !pageUrl.StartsWith(ReleasesPrefix, StringComparison.Ordinal)
                 || !Uri.TryCreate(pageUrl, UriKind.Absolute, out var page))

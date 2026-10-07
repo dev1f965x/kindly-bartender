@@ -16,5 +16,5 @@ internal static class DiagnosticLog
     public static void Write<TValue>(LogEvent logEvent, TValue value)
         where TValue : struct, Enum => File.Write(logEvent, value);
 
-    public static void Error(LogEvent logEvent, Exception error) => File.Write(logEvent, error);
+    public static void Error(LogEvent logEvent, Exception exception) => File.Write(logEvent, exception);
 }

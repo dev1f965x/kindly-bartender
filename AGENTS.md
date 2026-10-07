@@ -29,6 +29,7 @@ The commands are listed in [README.md](README.md#development). Run every check (
 
 - Comments explain why, not what.
 - Never commit Hearthstone logs or text from them; they contain BattleTags and account IDs. Test fixtures are written by hand. `scripts/Test-NoGameLogs.ps1` enforces this.
+- The diagnostic log takes only `LogEvent` values with a number, an enum value, or an exception (written as type and HResult). Never add a way to write text to it: messages and paths can carry the Windows user name.
 
 ## Git and pull requests
 
