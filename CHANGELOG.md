@@ -9,3 +9,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Solution layout, analyzers, the check script, and CI.
+- Power.log parser for game creation, game entity tags, spectating, and the log size cap.

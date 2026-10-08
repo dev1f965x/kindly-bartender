@@ -15,29 +15,13 @@ function Invoke-Step([string]$Name, [scriptblock]$Command) {
     }
 }
 
-function Test-HasTestProject {
-    $projects = dotnet sln $solution list | Where-Object { $_ -like '*.csproj' }
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet sln list failed with exit code $LASTEXITCODE"
-    }
-    foreach ($project in $projects) {
-        if (Select-String -LiteralPath (Join-Path $root $project) -Pattern 'Include="xunit\.v3"' -Quiet) {
-            return $true
-        }
-    }
-    return $false
-}
-
 Push-Location $root
 try {
     Invoke-Step 'Restore tools' { dotnet tool restore }
     Invoke-Step 'Format' { dotnet format $solution --verify-no-changes }
     # Restore runs NuGet audit; high and critical advisories fail here (Directory.Build.props).
     Invoke-Step 'Build' { dotnet build $solution --configuration Release }
-    # Microsoft.Testing.Platform fails when a run finds no tests, so the step waits for the first test project.
-    if (Test-HasTestProject) {
-        Invoke-Step 'Test' { dotnet test --solution $solution --configuration Release --no-build }
-    }
+    Invoke-Step 'Test' { dotnet test --solution $solution --configuration Release --no-build }
     # Test-only packages are held to the shipped-code list too, which is stricter than the handbook requires.
     Invoke-Step 'Licenses' {
         dotnet nuget-license --input $solution --include-transitive `
