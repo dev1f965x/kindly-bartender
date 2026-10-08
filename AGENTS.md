@@ -4,11 +4,11 @@ Guidance for coding agents working in this repository. Humans should start with 
 
 ## Project
 
-A Windows desktop app.
+A Windows tray app that notifies a Hearthstone Battlegrounds player when a Recruit phase starts while Hearthstone is in the background. It reads Hearthstone's Power.log. Product documents (Problem Brief, PRD, Design Doc) are in the KBT Confluence space.
 
 ## Setup
 
-<!-- Development environment (Dev Container for web and backend projects) and how to start it. -->
+Windows native: the .NET SDK pinned in `global.json` and VS Code with C# Dev Kit. There is no Dev Container, because WPF and the Windows APIs need Windows.
 
 ## Commands
 
@@ -18,10 +18,15 @@ The commands are listed in [README.md](README.md#development). Run every check (
 
 | Path | Contents |
 | --- | --- |
+| `src/KindlyBartender.Core` | Log parsing, game tracking, settings, configuration file editing. No Windows APIs. |
+| `src/KindlyBartender.App` | WPF tray app and Windows adapters (`net10.0-windows10.0.22621.0`). |
+| `tests/` | xUnit v3 test projects, run through Microsoft.Testing.Platform. |
+| `scripts/` | The check script and the checks it runs. |
 
 ## Conventions
 
 - Comments explain why, not what.
+- Never commit Hearthstone logs or text from them; they contain BattleTags and account IDs. Test fixtures are written by hand. `scripts/Test-NoGameLogs.ps1` enforces this.
 
 ## Git and pull requests
 

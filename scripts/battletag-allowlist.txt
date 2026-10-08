@@ -1,0 +1,1 @@
+# Entries are <file>:<text> for matches that are not account names.

@@ -1,0 +1,11 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
+.vs/
+
+# Hearthstone logs carry account identifiers; never commit them.
+*.log
+Logs/
