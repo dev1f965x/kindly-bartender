@@ -24,6 +24,7 @@ internal sealed class MessageCard : Border
 
     private readonly TextBlock _text = new() { TextWrapping = TextWrapping.Wrap, FontSize = 14 };
     private readonly StackPanel _body = new();
+    private readonly StackPanel _extras = new();
 
     public MessageCard()
     {
@@ -36,6 +37,7 @@ internal sealed class MessageCard : Border
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition());
         _body.Children.Add(_text);
+        _body.Children.Add(_extras);
         Grid.SetColumn(_body, 1);
         grid.Children.Add(_mark);
         grid.Children.Add(_body);
@@ -44,7 +46,7 @@ internal sealed class MessageCard : Border
     }
 
     /// <summary>Extra content under the text, such as a link.</summary>
-    public UIElementCollection Extras => _body.Children;
+    public UIElementCollection Extras => _extras.Children;
 
     public string Text => _text.Text;
 

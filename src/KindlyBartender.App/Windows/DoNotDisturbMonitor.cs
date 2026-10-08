@@ -5,7 +5,7 @@ using Windows.UI.Notifications;
 
 namespace KindlyBartender.App.Windows;
 
-/// <summary>Reads the Windows notification mode (PRD FR22).</summary>
+/// <summary>Reads the Windows notification mode.</summary>
 internal sealed class DoNotDisturbMonitor : IDoNotDisturb, IDisposable
 {
     private readonly ToastNotificationManagerForUser? _manager;

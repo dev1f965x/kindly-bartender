@@ -6,7 +6,7 @@ namespace KindlyBartender.Core.Notifications;
 /// </summary>
 public interface INotificationActions
 {
-    /// <summary>Whether Hearthstone's window is the one the player is using right now (PRD FR16).</summary>
+    /// <summary>Whether Hearthstone's window is the one the player is using right now.</summary>
     bool IsHearthstoneActive();
 
     /// <summary>Shows a Windows notification. Selecting it brings Hearthstone forward.</summary>

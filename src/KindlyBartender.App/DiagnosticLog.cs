@@ -2,7 +2,7 @@ using KindlyBartender.Core.Diagnostics;
 
 namespace KindlyBartender.App;
 
-/// <summary>The app's diagnostic log in the data folder, for the player to attach to a problem report (PRD FR27).</summary>
+/// <summary>The app's diagnostic log in the data folder, for the player to attach to a problem report.</summary>
 internal static class DiagnosticLog
 {
     private static readonly DiagnosticLogFile File = new(AppPaths.LogsFolder, () => DateTimeOffset.Now);

@@ -8,7 +8,7 @@ using Microsoft.Win32;
 
 namespace KindlyBartender.App.Views;
 
-/// <summary>Explains the log settings and the risk, and changes the settings only after the player agrees (PRD FR3 to FR6).</summary>
+/// <summary>Explains the log settings and the risk, and changes the settings only after the player agrees.</summary>
 internal sealed partial class SetupWindow : Window
 {
     /// <summary>Shown instead of the real path, which contains the Windows user name.</summary>
@@ -19,8 +19,7 @@ internal sealed partial class SetupWindow : Window
     private string? _folder;
     private bool _settingUp;
 
-    /// <param name="shell">The app shell.</param>
-    /// <param name="isInstallFolder">Checks a Hearthstone folder; screenshots pass a stand-in so no real folder is shown.</param>
+    /// <summary>Screenshots pass a stand-in folder check, so that no real folder is shown.</summary>
     public SetupWindow(AppShell shell, Func<string?, bool>? isInstallFolder = null)
     {
         _shell = shell;
@@ -61,8 +60,8 @@ internal sealed partial class SetupWindow : Window
         SetUpButton.IsEnabled = found;
         if (found)
         {
-            PathText.Fill(LogConfigText, Strings.Get("Setup.Files.LogConfig"), LogConfigDisplayPath);
-            PathText.Fill(ClientConfigText, Strings.Get("Setup.Files.ClientConfig"), Core.Configuration.HearthstoneConfig.ClientConfigPath(_folder!));
+            PathText.Fill(LogConfigText, Strings.Get("Setup.Files.LogConfig"), [LogConfigDisplayPath]);
+            PathText.Fill(ClientConfigText, Strings.Get("Setup.Files.ClientConfig"), [Core.Configuration.HearthstoneConfig.ClientConfigPath(_folder!)]);
         }
         else
         {

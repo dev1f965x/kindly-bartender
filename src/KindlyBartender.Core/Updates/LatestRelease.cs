@@ -7,7 +7,7 @@ namespace KindlyBartender.Core.Updates;
 /// <param name="PageUrl">The release page on GitHub.</param>
 public sealed record AvailableUpdate(string Version, Uri PageUrl);
 
-/// <summary>Reads GitHub's latest-release response (Design Doc, Security: the only network request).</summary>
+/// <summary>Reads GitHub's latest-release response, the app's only network request.</summary>
 public static class LatestRelease
 {
     /// <summary>Release pages outside this address are never opened, whatever the response says.</summary>

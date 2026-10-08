@@ -8,15 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Solution layout, analyzers, the check script, and CI.
-- Power.log parser for game creation, game entity tags, spectating, and the log size cap.
-- Game tracker that reports hero selection and each Recruit phase, and the tray status priorities.
-- Log monitor that finds the running Hearthstone session's log folder, follows Power.log as it grows, and rebuilds the current game silently when attaching mid-game.
-- Setup of Hearthstone's log.config and client.config that keeps other tools' settings, backs up the originals, and asks for administrator rights only when a write is denied.
-- UI words (CONTENT.md), visual rules (DESIGN.md), wireframes, and a check for forbidden words and punctuation in UI strings.
-- Windows notifications, sound, taskbar flashing, showing Hearthstone in front without taking focus, and a Do not disturb check.
-- Tray icon and menu, one copy per user, settings file, start with Windows, Korean and English UI text generated from CONTENT.md, and the notification rules.
-- Log settings, Settings, and About windows in the Windows 11 style, with light and dark themes and Korean and English text.
-- Diagnostic log with daily files and no free text, and an update check against GitHub Releases.
-- End-to-end test that plays a synthetic game into a temporary Hearthstone folder and checks the notifications.
-- Installer and portable zip built with Velopack, an app icon, uninstall cleanup of the start-with-Windows entry and the notification app ID, third-party notices in the package, and a release workflow that attaches the setup program, the portable zip, and checksums to a draft release.
+- Notifications when hero selection or a Recruit phase starts in solo Battlegrounds while you are in another window, with sound and a flashing taskbar button.
+- Selecting a notification brings Hearthstone back. An option shows Hearthstone in front without taking keyboard focus.
+- Nothing is shown while Hearthstone is the active window, after a game ends, or in other modes.
+- Log settings window that changes Hearthstone's two log settings only after you agree, keeping other tools' settings.
+- Tray icon that shows whether the app is ready, paused, or needs attention.
+- Settings for each kind of alert, start with Windows, language, and the Hearthstone folder.
+- Korean and English, light and dark mode.
+- A notice when a new version is on GitHub.
+- A local diagnostic log without account names, for problem reports.
+- Installer and portable zip.

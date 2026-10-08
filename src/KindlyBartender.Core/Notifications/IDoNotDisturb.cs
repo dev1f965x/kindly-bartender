@@ -1,6 +1,6 @@
 namespace KindlyBartender.Core.Notifications;
 
-/// <summary>Whether Windows may hide the app's notifications (PRD FR22). The app only tells the player; it never bypasses the setting.</summary>
+/// <summary>Whether Windows may hide the app's notifications. The app only tells the player; it never bypasses the setting.</summary>
 public interface IDoNotDisturb
 {
     /// <summary>True when Do not disturb or another mode lets only priority notifications or alarms through.</summary>

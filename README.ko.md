@@ -6,7 +6,7 @@
 
 아직 개발 중이며 출시된 버전은 없습니다.
 
-Kindly Bartender는 비공식 팬 프로젝트이며 Blizzard Entertainment와 제휴하거나 보증을 받지 않았습니다. Hearthstone은 Blizzard Entertainment, Inc.의 상표입니다.
+Kindly Bartender는 비공식 팬 프로젝트이며 블리자드 엔터테인먼트와 제휴하거나 보증을 받지 않았습니다. Hearthstone은 Blizzard Entertainment, Inc.의 상표입니다.
 
 ## 설치
 
@@ -20,7 +20,7 @@ Windows 10 버전 2004 이상 또는 Windows 11이 필요합니다.
 
 ## 제거
 
-**설정 > 앱 > 설치된 앱**(Windows 11) 또는 **설정 > 앱 > 앱 및 기능**(Windows 10)에서 제거합니다. 앱과 설정, 진단 기록, Windows 시작 시 실행 항목이 지워집니다. 덱 트래커 같은 다른 도구가 쓸 수 있어 하스스톤의 로그 설정은 그대로 둡니다. 되돌리려면 `%LOCALAPPDATA%\Blizzard\Hearthstone\log.config`에서 `[Power]` 구역을, 하스스톤 폴더의 `client.config`에서 `FileSizeLimit.Int` 줄을 지우세요.
+**설정 > 앱 > 설치된 앱**(Windows 11) 또는 **설정 > 앱 > 앱 및 기능**(Windows 10)에서 제거합니다. 앱과 설정, 진단 기록, Windows 시작 시 실행 항목이 지워집니다. 덱 트래커 같은 다른 도구가 쓸 수 있어 하스스톤의 로그 설정은 그대로 둡니다. 되돌리려면 `%LOCALAPPDATA%\Blizzard\Hearthstone\log.config`에서 `[Power]` 섹션을, 하스스톤 폴더의 `client.config`에서 `FileSizeLimit.Int` 줄을 지우세요.
 
 ## 개인정보
 
@@ -33,7 +33,7 @@ Kindly Bartender는 개인정보를 수집하지 않으며 사용 통계도 보�
 
 필요한 것: Windows 11과 [global.json](global.json)에 적힌 버전의 .NET SDK
 
-명령 목록은 [README.md](README.md#development)의 표를 기준으로 합니다.
+명령 목록은 [README.md](README.md#development)를 참고하세요.
 
 ## 라이선스
 

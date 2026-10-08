@@ -23,7 +23,7 @@ public enum SettingsLoadResult
     TooNew,
 }
 
-/// <summary>Reads and writes settings.json in the app's data folder (Design Doc, Local data).</summary>
+/// <summary>Reads and writes settings.json in the app's data folder.</summary>
 public sealed class SettingsStore(string path)
 {
     private static readonly JsonSerializerOptions Options = new()

@@ -2,8 +2,7 @@ namespace KindlyBartender.Core.Diagnostics;
 
 /// <summary>
 /// The only things the diagnostic log can say. Entries carry an event, optionally a number or an enum value, and
-/// for errors the exception type and HResult; never free text, which could hold paths with the Windows user name
-/// (Design Doc, Local data).
+/// for errors the exception type and HResult; never free text, which could hold paths with the Windows user name.
 /// </summary>
 public enum LogEvent
 {

@@ -2,7 +2,7 @@ using Microsoft.Win32;
 
 namespace KindlyBartender.App;
 
-/// <summary>The value under the user's Run key that starts the app with Windows (PRD FR24).</summary>
+/// <summary>The value under the user's Run key that starts the app with Windows.</summary>
 internal sealed class StartupEntry(string keyPath = StartupEntry.RunKey, string valueName = "KindlyBartender")
 {
     public const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";

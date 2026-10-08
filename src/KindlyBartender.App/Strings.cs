@@ -4,7 +4,7 @@ using KindlyBartender.Core.Settings;
 
 namespace KindlyBartender.App;
 
-/// <summary>UI strings from Resources/Strings*.resx, which are generated from CONTENT.md (PRD FR25).</summary>
+/// <summary>UI strings from Resources/Strings*.resx, which are generated from CONTENT.md.</summary>
 internal static class Strings
 {
     private static readonly ResourceManager Resources = new("KindlyBartender.App.Resources.Strings", typeof(Strings).Assembly);

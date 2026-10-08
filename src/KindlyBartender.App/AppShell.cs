@@ -45,9 +45,7 @@ internal sealed class AppShell : IDisposable
     private bool _paused;
     private Task<SetupResult>? _setup;
 
-    /// <param name="dispatcher">The UI thread.</param>
-    /// <param name="dataFolder">Where settings.json lives; tests pass a temporary folder.</param>
-    /// <param name="startup">The start-with-Windows entry; tests pass one under a test key.</param>
+    /// <summary>Tests pass a temporary data folder and a startup entry under a test key.</summary>
     public AppShell(Dispatcher dispatcher, string dataFolder, StartupEntry startup)
     {
         _dispatcher = dispatcher;
@@ -170,8 +168,8 @@ internal sealed class AppShell : IDisposable
     }
 
     /// <summary>
-    /// Records the player's agreement and options, then changes the log settings off the UI thread
-    /// (PRD FR3 to FR6). Only the files' log settings are touched.
+    /// Records the player's agreement and options, then changes the log settings off the UI thread. Only the
+    /// files' log settings are touched.
     /// </summary>
     public Task<SetupResult> RunSetupAsync(string installFolder, bool startWithWindows, bool bringToFront)
     {
@@ -252,7 +250,7 @@ internal sealed class AppShell : IDisposable
         var wasNeeded = _setupNeeded;
         _setupNeeded = Settings.SetupAgreedAt is null || InstallFolder is null || HearthstoneSetup.IsNeeded(InstallFolder);
 
-        // Hearthstone reads its settings when it starts, so files changed after that need a restart (FR5). Comparing
+        // Hearthstone reads its settings when it starts, so files changed after that need a restart. Comparing
         // times rather than remembering the write also holds when the app itself was restarted meanwhile.
         _restartNeeded = !_setupNeeded && _monitor.Process is { } process && LastConfigWrite(InstallFolder!) > process.StartTimeLocal;
 

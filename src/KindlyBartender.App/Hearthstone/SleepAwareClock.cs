@@ -5,7 +5,7 @@ namespace KindlyBartender.App.Hearthstone;
 
 /// <summary>
 /// A monotonic clock that stands still while the PC sleeps or hibernates, so the Recruit deadline does not run
-/// out during sleep (Design Doc, Game tracker). It reads the unbiased interrupt time, which leaves out time in
+/// out during sleep. It reads the unbiased interrupt time, which leaves out time in
 /// sleep and hibernation without depending on power events arriving.
 /// </summary>
 internal sealed partial class SleepAwareClock : IMonotonicClock
