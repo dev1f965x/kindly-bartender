@@ -8,6 +8,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>KindlyBartender.App</RootNamespace>
     <AssemblyName>KindlyBartender</AssemblyName>
+    <!-- The LibraryImport source generator emits pointer code for Win32 calls; no hand-written unsafe code. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
