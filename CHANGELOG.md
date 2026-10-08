@@ -12,3 +12,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Power.log parser for game creation, game entity tags, spectating, and the log size cap.
 - Game tracker that reports hero selection and each Recruit phase, and the tray status priorities.
 - Log monitor that finds the running Hearthstone session's log folder, follows Power.log as it grows, and rebuilds the current game silently when attaching mid-game.
+- Setup of Hearthstone's log.config and client.config that keeps other tools' settings, backs up the originals, and asks for administrator rights only when a write is denied.
