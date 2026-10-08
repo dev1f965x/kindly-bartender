@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kindly Bartender wireframes</title>
+<style>
+  /* Low-fidelity layout only: gray boxes and system fonts. Text comes from CONTENT.md (Korean). */
+  :root { --line: #8a8a8a; --fill: #ececec; --text: #1f1f1f; --muted: #5c5c5c; }
+  body { margin: 24px; background: #fff; color: var(--text); font: 14px/1.45 "Segoe UI", sans-serif; word-break: keep-all; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 24px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .window { border: 1px solid var(--line); background: #fff; padding: 24px; box-sizing: border-box; }
+  .w480 { width: 480px; } .w520 { width: 520px; }
+  .titlebar { margin: -24px -24px 16px; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  h2 { font-size: 20px; font-weight: 600; margin: 0 0 12px; }
+  h3 { font-size: 14px; font-weight: 600; margin: 24px 0 8px; }
+  p { margin: 0 0 8px; }
+  .note { font-size: 12px; color: var(--muted); }
+  .card { border: 1px solid var(--line); background: var(--fill); padding: 12px; }
+  .row { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0; }
+  .box { width: 16px; height: 16px; border: 1px solid var(--line); flex: none; margin-top: 2px; }
+  .box.on { background: var(--line); }
+  .toggle { width: 36px; height: 18px; border: 1px solid var(--line); border-radius: 9px; flex: none; margin-left: auto; }
+  .toggle.on { background: var(--line); }
+  code { font: 12px Consolas, monospace; }
+  .buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+  .button { border: 1px solid var(--line); padding: 5px 14px; }
+  .button.primary { background: var(--line); color: #fff; }
+  .banner { border: 1px solid var(--line); padding: 8px 12px; margin: 12px 0; display: flex; gap: 8px; }
+  .icon { width: 16px; height: 16px; border: 1px solid var(--line); border-radius: 50%; flex: none; text-align: center; font-size: 11px; line-height: 16px; }
+  .menu { width: 280px; border: 1px solid var(--line); padding: 4px 0; }
+  .menu div { padding: 6px 16px; }
+  .menu .status { color: var(--muted); border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+  .toast { width: 360px; border: 1px solid var(--line); padding: 12px 16px; }
+  .toast .app { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .field { border: 1px solid var(--line); padding: 4px 8px; flex: 1; }
+</style>
+</head>
+<body>
+<h1>Kindly Bartender wireframes</h1>
+<p class="lede">Layout and states for the first release. Gray boxes only; visuals follow DESIGN.md. Text from CONTENT.md.</p>
+
+<div class="grid">
+
+<figure>
+  <figcaption>1. Log settings — first run</figcaption>
+  <div class="window w520">
+    <div class="titlebar"><span>Kindly Bartender</span><span>✕</span></div>
+    <h2>로그 설정</h2>
+    <p>Kindly Bartender는 다른 창을 보고 있을 때 영웅 선택이나 상점 단계가 시작되면 알려 줍니다. 이를 위해 하스스톤 로그를 읽는데, 하스스톤은 설정 파일 두 개를 바꿔야 로그를 남깁니다.</p>
+    <h3>바뀌는 파일</h3>
+    <div class="card">
+      <p><code>%LOCALAPPDATA%\Blizzard\Hearthstone\log.config</code>: 게임 로그를 켭니다</p>
+      <p><code>C:\Program Files (x86)\Hearthstone\client.config</code>: 로그 크기 제한을 없앱니다</p>
+      <p class="note">이 설정만 바뀝니다. 파일의 다른 설정은 그대로 둡니다.</p>
+    </div>
+    <h3>계속하기 전에</h3>
+    <p>Kindly Bartender는 블리자드 엔터테인먼트가 만들거나 보증하지 않은 비공식 팬 프로젝트입니다. 블리자드 최종 사용자 사용권 계약은 허가받지 않은 프로그램이 게임 데이터를 읽는 것을 금지합니다. 덱 트래커가 오랫동안 같은 로그를 읽어 왔지만 블리자드가 이를 허용한다는 뜻은 아닙니다. 블리자드가 계정에 제재를 가할 수 있습니다. 사용에 따른 책임은 사용자에게 있습니다.</p>
+    <h3>옵션</h3>
+    <div class="row"><span class="box on"></span><span>Windows 시작 시 Kindly Bartender 실행</span></div>
+    <div class="row"><span class="box"></span><span>단계가 시작되면 하스스톤 화면을 앞으로 가져오기<br><span class="note">키보드 입력은 지금 쓰는 창에 그대로 남습니다.</span></span></div>
+    <p class="note">Windows 방해 금지가 켜져 있으면 알림이 숨겨질 수 있습니다. 알림을 받으려면 Windows 설정에서 Kindly Bartender를 우선순위 알림에 추가하세요. <u>Windows 알림 설정</u></p>
+    <div class="buttons"><span class="button">닫기</span><span class="button primary">동의하고 설정하기</span></div>
+  </div>
+</figure>
+
+<figure>
+  <figcaption>2. Log settings — states (replace the file card or appear above the buttons)</figcaption>
+  <div class="window w520">
+    <div class="titlebar"><span>Kindly Bartender</span><span>✕</span></div>
+    <h2>로그 설정</h2>
+    <p class="note">Hearthstone not found (replaces the file card):</p>
+    <div class="banner"><span class="icon">!</span><span>하스스톤을 찾지 못했습니다. Hearthstone.exe가 있는 폴더를 선택하세요.</span></div>
+    <div class="row"><span class="field note">—</span><span class="button">폴더 선택</span></div>
+    <p class="note">After a folder without Hearthstone.exe:</p>
+    <div class="banner"><span class="icon">!</span><span>이 폴더에 Hearthstone.exe가 없습니다. 다른 폴더를 선택하세요.</span></div>
+    <p class="note">After setup, Hearthstone not running (buttons become one: 닫기):</p>
+    <div class="banner"><span class="icon">i</span><span>로그 설정을 마쳤습니다.</span></div>
+    <p class="note">After setup, Hearthstone running (buttons become one: 닫기):</p>
+    <div class="banner"><span class="icon">i</span><span>로그 설정을 마쳤습니다. 알림을 받으려면 하스스톤을 다시 시작하세요.</span></div>
+    <p class="note">A settings file is read-only or not UTF-8:</p>
+    <div class="banner"><span class="icon">!</span><span>로그 설정 파일이 읽기 전용이거나 Kindly Bartender가 안전하게 바꿀 수 없는 인코딩이라 바꾸지 않았습니다. 파일 속성에서 읽기 전용을 끄거나 파일을 UTF-8로 저장한 뒤 다시 시도하세요.</span></div>
+    <p class="note">Administrator prompt cancelled:</p>
+    <div class="banner"><span class="icon">!</span><span>관리자 권한을 허용하지 않아 로그 크기 제한을 없애지 못했습니다. 다시 하려면 동의하고 설정하기를 선택하세요.</span></div>
+    <p class="note">Write failed:</p>
+    <div class="banner"><span class="icon">!</span><span>로그 설정을 바꾸지 못했습니다. 하스스톤을 종료한 뒤 다시 시도하세요.</span></div>
+  </div>
+</figure>
+
+<figure>
+  <figcaption>3. Settings</figcaption>
+  <div class="window w480">
+    <div class="titlebar"><span>Kindly Bartender</span><span>✕</span></div>
+    <h2>설정</h2>
+    <h3>단계가 시작되면</h3>
+    <div class="card">
+      <div class="row"><span>알림 표시</span><span class="toggle on"></span></div>
+      <div class="row"><span>소리 재생</span><span class="toggle on"></span></div>
+      <div class="row"><span>작업 표시줄에서 하스스톤 깜빡이기</span><span class="toggle on"></span></div>
+      <div class="row"><span>하스스톤 화면을 앞으로 가져오기</span><span class="toggle"></span></div>
+      <p class="note">하스스톤이 활성 창이면 아무것도 하지 않습니다.</p>
+    </div>
+    <div class="banner"><span class="icon">!</span><span>방해 금지가 켜져 있어 알림이 숨겨질 수 있습니다. 알림을 받으려면 Windows 설정에서 Kindly Bartender를 우선순위 알림에 추가하세요.<br><u>Windows 알림 설정</u></span></div>
+    <p class="note">(Shown only while do not disturb is on. Otherwise only the link <u>Windows 알림 설정</u> appears under the card.)</p>
+    <h3>일반</h3>
+    <div class="card">
+      <div class="row"><span>Windows 시작 시 실행</span><span class="toggle on"></span></div>
+      <div class="row"><span>언어</span><span class="field" style="flex:0 0 160px">Windows 언어 사용 ▾</span></div>
+      <div class="row"><span style="flex:0 0 auto">하스스톤 폴더</span></div>
+      <div class="row"><code class="field">C:\Program Files (x86)\Hearthstone</code><span class="button">변경</span></div>
+    </div>
+  </div>
+</figure>
+
+<figure>
+  <figcaption>4. About (with an update available)</figcaption>
+  <div class="window w480">
+    <div class="titlebar"><span>Kindly Bartender</span><span>✕</span></div>
+    <h2>정보</h2>
+    <p>Kindly Bartender · 버전 0.1.0</p>
+    <div class="banner"><span class="icon">i</span><span>새 버전이 나왔습니다: 0.1.1<br><u>다운로드 페이지 열기</u></span></div>
+    <p>Kindly Bartender는 비공식 팬 프로젝트이며, 블리자드 엔터테인먼트와 제휴하지 않았고 보증도 받지 않았습니다. Hearthstone은 Blizzard Entertainment, Inc.의 상표입니다.</p>
+    <p>블리자드 엔터테인먼트 최종 사용자 사용권 계약은 허가받지 않은 프로그램이 게임 데이터를 읽는 것을 금지하며, 블리자드가 계정에 제재를 가할 수 있습니다. 사용에 따른 책임은 사용자에게 있습니다.</p>
+    <h3>Kindly Bartender가 읽고 바꾸는 것</h3>
+    <p>게임이 실행되는 동안 하스스톤의 Power.log를 읽습니다. 동의하면 다음 두 파일의 로그 설정을 바꿉니다: <code>%LOCALAPPDATA%\Blizzard\Hearthstone\log.config</code>, <code>C:\Program Files (x86)\Hearthstone\client.config</code>. 다른 도구가 쓸 수 있어 제거해도 이 변경은 되돌리지 않습니다. 되돌리려면 첫 번째 파일의 [Power] 구역과 두 번째 파일의 FileSizeLimit.Int 줄을 지우세요.</p>
+    <h3>개인정보</h3>
+    <p>Kindly Bartender는 개인정보를 수집하지 않으며 사용자나 게임에 관한 정보를 보내지 않습니다. 시작할 때 GitHub에서 새 버전을 확인하므로, 다른 웹 요청과 마찬가지로 IP 주소가 GitHub에 전달됩니다.</p>
+    <p>라이선스: MIT · <u>제3자 고지</u> · <u>문제 신고</u></p>
+    <div class="row"><span class="button">진단 기록 열기</span></div>
+    <p class="note">진단 기록에는 계정 이름이 없습니다. 문제를 신고할 때 첨부할 수 있습니다.</p>
+    <div class="buttons"><span class="button primary">닫기</span></div>
+  </div>
+</figure>
+
+<figure>
+  <figcaption>5. Tray menu — Ready with an update available, and Setup needed</figcaption>
+  <div class="menu">
+    <div class="status">준비됨</div>
+    <div>설정</div>
+    <div>알림 일시 중지</div>
+    <div>새 버전 다운로드: 0.1.1</div>
+    <div>정보</div>
+    <div>종료</div>
+  </div>
+  <div style="height:12px"></div>
+  <div class="menu">
+    <div class="status">로그 설정 필요</div>
+    <div>로그 설정하기</div>
+    <div>설정</div>
+    <div>알림 일시 중지</div>
+    <div>정보</div>
+    <div>종료</div>
+  </div>
+</figure>
+
+<figure>
+  <figcaption>5a. Tray status, tooltip text, and icon mark by state</figcaption>
+  <table style="border-collapse:separate; border-spacing:16px 6px; font-size:13px; max-width:620px">
+    <tr><th style="text-align:left; padding:4px 12px 4px 0">State</th><th style="text-align:left; padding:4px 12px 4px 0">Status line and tooltip</th><th style="text-align:left; padding:4px 0">Icon mark</th></tr>
+    <tr><td>Setup needed</td><td>로그 설정 필요</td><td>! in a circle</td></tr>
+    <tr><td>Restart needed</td><td>하스스톤 다시 시작 필요</td><td>! in a circle</td></tr>
+    <tr><td>Not working</td><td>알림이 작동하지 않을 수 있음</td><td>! in a circle</td></tr>
+    <tr><td>Paused</td><td>알림 일시 중지됨 (menu item: 알림 다시 받기)</td><td>pause bars</td></tr>
+    <tr><td>Waiting</td><td>하스스톤 실행 대기 중</td><td>dimmed glyph, small clock</td></tr>
+    <tr><td>Ready</td><td>준비됨</td><td>none</td></tr>
+    <tr><td>Ready, do not disturb on</td><td>준비됨 · 방해 금지가 켜져 있어 알림이 숨겨질 수 있음 (tooltip second line)</td><td>none</td></tr>
+  </table>
+</figure>
+
+<figure>
+  <figcaption>6. Notifications</figcaption>
+  <div class="toast"><div class="app">Kindly Bartender</div><strong>상점 단계가 시작되었습니다</strong><p>선택하면 하스스톤으로 돌아갑니다.</p></div>
+  <div style="height:12px"></div>
+  <div class="toast"><div class="app">Kindly Bartender</div><strong>영웅 선택이 시작되었습니다</strong><p>선택하면 하스스톤으로 돌아갑니다.</p></div>
+  <div style="height:12px"></div>
+  <div class="toast"><div class="app">Kindly Bartender</div><strong>알림이 작동하지 않을 수 있습니다</strong><p>하스스톤이 로그 기록을 멈췄습니다. 하스스톤을 다시 시작하세요.</p></div>
+  <div style="height:12px"></div>
+  <div class="toast"><div class="app">Kindly Bartender</div><strong>로그 설정이 없습니다</strong><p>하스스톤의 로그 설정이 지워졌습니다. 선택하면 로그 설정 창이 열립니다.</p></div>
+</figure>
+
+</div>
+</body>
+</html>

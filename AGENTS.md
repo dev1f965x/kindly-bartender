@@ -22,6 +22,8 @@ The commands are listed in [README.md](README.md#development). Run every check (
 | `src/KindlyBartender.App` | WPF tray app and Windows adapters (`net10.0-windows10.0.22621.0`). |
 | `tests/` | xUnit v3 test projects, run through Microsoft.Testing.Platform. |
 | `scripts/` | The check script and the checks it runs. |
+| `design/wireframes/` | Low-fidelity wireframes (`index.html`) and their capture (`capture.ps1`). |
+| `CONTENT.md`, `DESIGN.md` | UI words and visual rules; `scripts/Test-Content.ps1` checks the strings. |
 
 ## Conventions
 
