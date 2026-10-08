@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using KindlyBartender.App.Configuration;
@@ -49,7 +50,7 @@ public partial class App : Application
         TaskScheduler.UnobservedTaskException += (_, args) => DiagnosticLog.Error(LogEvent.UnobservedTaskError, args.Exception.GetBaseException());
 
         // Before the tray icon exists, so it and the notifications carry the app ID.
-        AppIdentity.Register("Kindly Bartender", iconPath: null);
+        AppIdentity.Register("Kindly Bartender", Path.Combine(AppContext.BaseDirectory, "Assets", "KindlyBartender.ico"));
 
         _shell = new AppShell(Dispatcher, AppPaths.DataFolder, new StartupEntry());
         var windows = new WindowHost(_shell);

@@ -39,6 +39,7 @@ public enum LogEvent
     OpenLinkFailed,
     UpdateCheckFailed,
     UpdateAvailable,
+    UninstallCleanupFailed,
 
     /// <summary>The day's file reached its size limit; nothing more is written that day.</summary>
     LogFull,

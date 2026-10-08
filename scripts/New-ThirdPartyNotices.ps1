@@ -1,0 +1,115 @@
+#Requires -Version 7
+# Writes THIRD-PARTY-NOTICES.txt for the shipped app: every NuGet package the app uses, with its license text,
+# and the .NET runtime that a self-contained build carries. Run by the release workflow.
+param(
+    [Parameter(Mandatory)][string]$OutputPath,
+    # The self-contained build, whose dependency file names the runtime versions shipped.
+    [Parameter(Mandatory)][string]$PublishDirectory
+)
+$ErrorActionPreference = 'Stop'
+$root = Split-Path $PSScriptRoot -Parent
+$project = Join-Path $root 'src/KindlyBartender.App/KindlyBartender.App.csproj'
+$work = Join-Path ([IO.Path]::GetTempPath()) ("kb-notices-" + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $work | Out-Null
+
+$mit = @'
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+'@
+
+try {
+    $json = Join-Path $work 'packages.json'
+    $texts = Join-Path $work 'texts'
+    dotnet nuget-license --input $project --include-transitive --output Json --file-output $json --license-information-download-location $texts
+    if ($LASTEXITCODE -ne 0) {
+        throw "nuget-license failed with exit code $LASTEXITCODE"
+    }
+
+    $builder = [Text.StringBuilder]::new()
+    [void]$builder.AppendLine('Kindly Bartender includes the following third-party software.')
+    [void]$builder.AppendLine()
+
+    # The runtime versions actually shipped, from the self-contained build's dependency file.
+    $deps = Get-Content (Join-Path $PublishDirectory 'KindlyBartender.deps.json') -Raw | ConvertFrom-Json -AsHashtable
+    $libraries = $deps['libraries'].Keys
+    $runtime = ($libraries | Where-Object { $_ -like 'runtimepack.Microsoft.NETCore.App.Runtime.win-x64/*' }) -replace '^.*/', ''
+    $desktop = ($libraries | Where-Object { $_ -like 'runtimepack.Microsoft.WindowsDesktop.App.Runtime.win-x64/*' }) -replace '^.*/', ''
+    if (-not $runtime -or -not $desktop) {
+        throw 'The runtime versions were not found in KindlyBartender.deps.json; is the build self-contained?'
+    }
+
+    $packages = ((dotnet nuget locals global-packages --list) -replace '^global-packages:\s*', '').Trim()
+    $runtimePack = Join-Path $packages "microsoft.netcore.app.runtime.win-x64/$runtime"
+    $desktopPack = Join-Path $packages "microsoft.windowsdesktop.app.runtime.win-x64/$desktop"
+
+    function Add-Section([string]$Title, [string]$Text) {
+        [void]$builder.AppendLine(('=' * 78))
+        [void]$builder.AppendLine($Title)
+        [void]$builder.AppendLine()
+        [void]$builder.AppendLine($Text.Trim())
+        [void]$builder.AppendLine()
+    }
+
+    # WPF and Windows Forms keep their notices in their repositories, tagged with the runtime version.
+    function Get-Notice([string]$Repository) {
+        $url = "https://raw.githubusercontent.com/dotnet/$Repository/v$desktop/THIRD-PARTY-NOTICES.TXT"
+        (Invoke-WebRequest -Uri $url -UseBasicParsing).Content
+    }
+
+    Add-Section ".NET runtime $runtime" (Get-Content (Join-Path $runtimePack 'LICENSE.TXT') -Raw)
+    Add-Section ".NET runtime $runtime third-party notices" (Get-Content (Join-Path $runtimePack 'THIRD-PARTY-NOTICES.TXT') -Raw)
+    Add-Section "Windows Desktop runtime (WPF, Windows Forms) $desktop" (Get-Content (Join-Path $desktopPack 'LICENSE') -Raw)
+    Add-Section "WPF $desktop third-party notices" (Get-Notice 'wpf')
+    Add-Section "Windows Forms $desktop third-party notices" (Get-Notice 'winforms')
+
+    # Velopack's setup program, Update.exe, and launcher are Rust programs; their notices are generated once per
+    # Velopack version with cargo-about (third-party/README.md) and must match the version the app uses.
+    $velopack = ((Get-Content $json -Raw | ConvertFrom-Json) | Where-Object PackageId -eq 'Velopack').PackageVersion
+    $rustNotices = Join-Path $root "third-party/velopack-$velopack-rust-notices.txt"
+    if (-not (Test-Path $rustNotices)) {
+        throw "Missing $rustNotices; generate it for Velopack $velopack as third-party/README.md describes."
+    }
+    Add-Section "Velopack $velopack Rust components" (Get-Content $rustNotices -Raw)
+
+    foreach ($package in (Get-Content $json -Raw | ConvertFrom-Json) | Sort-Object PackageId) {
+        [void]$builder.AppendLine(('=' * 78))
+        [void]$builder.AppendLine("$($package.PackageId) $($package.PackageVersion)")
+        [void]$builder.AppendLine("License: $($package.License)")
+        if ($package.Copyright) {
+            [void]$builder.AppendLine($package.Copyright)
+        }
+        if ($package.PackageProjectUrl) {
+            [void]$builder.AppendLine($package.PackageProjectUrl)
+        }
+        $text = Get-ChildItem -Path $texts -Filter "$($package.PackageId)__$($package.PackageVersion).*" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($text -and $text.Extension -eq '.txt') {
+            [void]$builder.AppendLine()
+            [void]$builder.AppendLine((Get-Content $text.FullName -Raw).Trim())
+        }
+        elseif ($package.License -eq 'MIT') {
+            [void]$builder.AppendLine()
+            [void]$builder.AppendLine($mit)
+        }
+        else {
+            throw "No license text for $($package.PackageId); add it before releasing."
+        }
+        [void]$builder.AppendLine()
+    }
+
+    [IO.File]::WriteAllText($OutputPath, $builder.ToString(), [Text.UTF8Encoding]::new($false))
+    Write-Host "Wrote $OutputPath"
+}
+finally {
+    Remove-Item -Recurse -Force $work
+}
