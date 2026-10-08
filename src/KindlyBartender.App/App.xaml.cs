@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Threading;
 using KindlyBartender.App.Configuration;
+using KindlyBartender.App.Views;
 using KindlyBartender.App.Windows;
 
 namespace KindlyBartender.App;
@@ -46,7 +47,10 @@ public partial class App : Application
         // Before the tray icon exists, so it and the notifications carry the app ID.
         AppIdentity.Register("Kindly Bartender", iconPath: null);
 
-        _shell = new AppShell(Dispatcher);
+        _shell = new AppShell(Dispatcher, AppPaths.DataFolder, new StartupEntry());
+        var windows = new WindowHost(_shell);
+        _shell.WindowRequested += windows.Show;
+        _shell.ExitRequested += windows.CloseAll;
         _shell.ExitRequested += Shutdown;
         _instance.Listen(() => Dispatcher.BeginInvoke(_shell.ShowFromAnotherCopy), DiagnosticLog.Error);
         _shell.Start(background: e.Args.Contains(StartupEntry.BackgroundSwitch));

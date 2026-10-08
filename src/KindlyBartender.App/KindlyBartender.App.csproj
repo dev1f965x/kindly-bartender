@@ -10,6 +10,8 @@
     <AssemblyName>KindlyBartender</AssemblyName>
     <!-- The LibraryImport source generator emits pointer code for Win32 calls; no hand-written unsafe code. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- ThemeMode (the Fluent theme) is marked experimental in .NET 10 but is the supported way to get it; DESIGN.md. -->
+    <NoWarn>$(NoWarn);WPF0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

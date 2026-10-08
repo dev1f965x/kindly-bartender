@@ -30,8 +30,8 @@ internal sealed class AppShell : IDisposable
     public static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(250);
 
     private readonly Dispatcher _dispatcher;
-    private readonly SettingsStore _store = new(Path.Combine(AppPaths.DataFolder, "settings.json"));
-    private readonly StartupEntry _startup = new();
+    private readonly SettingsStore _store;
+    private readonly StartupEntry _startup;
     private readonly TrayController _tray = new();
     private readonly ToastService _toasts = new(DiagnosticLog.Error);
     private readonly DoNotDisturbMonitor _doNotDisturb = new(DiagnosticLog.Error);
@@ -46,9 +46,14 @@ internal sealed class AppShell : IDisposable
     private int _pollFailures;
     private string? _lastPollError;
 
-    public AppShell(Dispatcher dispatcher)
+    /// <param name="dispatcher">The UI thread.</param>
+    /// <param name="dataFolder">Where settings.json lives; tests pass a temporary folder.</param>
+    /// <param name="startup">The start-with-Windows entry; tests pass one under a test key.</param>
+    public AppShell(Dispatcher dispatcher, string dataFolder, StartupEntry startup)
     {
         _dispatcher = dispatcher;
+        _store = new SettingsStore(Path.Combine(dataFolder, "settings.json"));
+        _startup = startup;
 
         var (settings, result) = _store.Load();
         Settings = settings;
@@ -69,13 +74,13 @@ internal sealed class AppShell : IDisposable
 
         _policy = new NotificationPolicy(new WindowsNotificationActions(_toasts, DiagnosticLog.Error), PhaseText);
 
-        _tray.PauseToggled += () =>
-        {
-            _paused = !_paused;
-            UpdateTray();
-        };
         _tray.ExitRequested += () => ExitRequested?.Invoke();
-        _doNotDisturb.Changed += _ => _dispatcher.BeginInvoke(UpdateTray);
+        _doNotDisturb.Changed += _ => _dispatcher.BeginInvoke(() =>
+        {
+            UpdateTray();
+            DoNotDisturbChanged?.Invoke();
+        });
+        _tray.Items = MenuItems;
         SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
         _timer = new DispatcherTimer(PollInterval, DispatcherPriority.Background, (_, _) => Poll(), dispatcher);
@@ -90,10 +95,19 @@ internal sealed class AppShell : IDisposable
 
     public bool SetupNeeded => _setupNeeded;
 
+    /// <summary>The log settings were written while Hearthstone was running.</summary>
+    public bool RestartNeeded => _restartNeeded;
+
+    /// <summary>Raised on the UI thread when Do not disturb turns on or off.</summary>
+    public event Action? DoNotDisturbChanged;
+
     /// <summary>The Hearthstone folder in use, or null when the player has to choose one.</summary>
-    public string? InstallFolder { get; private set; }
+    public string? InstallFolder { get; internal set; }
 
     public TrayController Tray => _tray;
+
+    /// <summary>Supplies the update item for the tray menu, if any.</summary>
+    public Func<IEnumerable<System.Windows.Forms.ToolStripItem>>? UpdateMenuItems { get; set; }
 
     public bool MayHideNotifications => _doNotDisturb.MayHideNotifications;
 
@@ -175,16 +189,35 @@ internal sealed class AppShell : IDisposable
         });
 
         var result = await Task.Run(() => HearthstoneSetup.Apply(installFolder)).ConfigureAwait(true);
-        if (result == SetupResult.Done && _monitor.Process is not null)
-        {
-            // A running Hearthstone read its settings at start; it writes the log only after a restart. This is not
-            // stored: after an app restart the next Hearthstone start makes it moot anyway.
-            _restartNeeded = true;
-        }
-
         CheckSetup(notify: false);
         return result;
     }
+
+    /// <summary>Tray menu items in wireframe order; the update item is added when a newer version is known.</summary>
+    private IEnumerable<System.Windows.Forms.ToolStripItem> MenuItems()
+    {
+        if (_setupNeeded)
+        {
+            yield return MenuItem("Tray.Menu.SetUp", () => WindowRequested?.Invoke(AppWindow.Setup));
+        }
+
+        yield return MenuItem("Tray.Menu.Settings", () => WindowRequested?.Invoke(AppWindow.Settings));
+        yield return MenuItem(_paused ? "Tray.Menu.Resume" : "Tray.Menu.Pause", () =>
+        {
+            _paused = !_paused;
+            UpdateTray();
+        });
+
+        foreach (var item in UpdateMenuItems?.Invoke() ?? [])
+        {
+            yield return item;
+        }
+
+        yield return MenuItem("Tray.Menu.About", () => WindowRequested?.Invoke(AppWindow.About));
+    }
+
+    private static System.Windows.Forms.ToolStripMenuItem MenuItem(string id, Action onClick) =>
+        new(Strings.Get(id), null, (_, _) => onClick());
 
     public void Dispose()
     {
@@ -251,12 +284,7 @@ internal sealed class AppShell : IDisposable
         }
     }
 
-    private void OnHearthstoneStartedOrExited()
-    {
-        // The new or ended process is no longer running with the old settings.
-        _restartNeeded = false;
-        CheckSetup(notify: true);
-    }
+    private void OnHearthstoneStartedOrExited() => CheckSetup(notify: true);
 
     /// <summary>Checks the log settings; tells the player once when settings they agreed to have gone missing.</summary>
     private void CheckSetup(bool notify)
@@ -265,12 +293,23 @@ internal sealed class AppShell : IDisposable
         var wasNeeded = _setupNeeded;
         _setupNeeded = Settings.SetupAgreedAt is null || InstallFolder is null || HearthstoneSetup.IsNeeded(InstallFolder);
 
+        // Hearthstone reads its settings when it starts, so files changed after that need a restart (FR5). Comparing
+        // times rather than remembering the write also holds when the app itself was restarted meanwhile.
+        _restartNeeded = !_setupNeeded && _monitor.Process is { } process && LastConfigWrite(InstallFolder!) > process.StartTimeLocal;
+
         if (notify && _setupNeeded && !wasNeeded && Settings.SetupAgreedAt is not null)
         {
             ShowNotice("Toast.SetupNeeded.Title", "Toast.SetupNeeded.Body", () => WindowRequested?.Invoke(AppWindow.Setup));
         }
 
         UpdateTray();
+    }
+
+    private static DateTime LastConfigWrite(string installFolder)
+    {
+        var logConfig = File.GetLastWriteTime(AppPaths.LogConfig);
+        var clientConfig = File.GetLastWriteTime(Core.Configuration.HearthstoneConfig.ClientConfigPath(installFolder));
+        return logConfig > clientConfig ? logConfig : clientConfig;
     }
 
     private void ShowNotice(string titleId, string bodyId, Action? onSelected) =>

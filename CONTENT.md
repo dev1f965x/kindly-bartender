@@ -122,6 +122,8 @@ IDs match the resource keys. `{0}` is a value filled in by the app.
 | Settings.StartWithWindows | Start with Windows | Windows 시작 시 실행 |
 | Settings.Language | Language | 언어 |
 | Settings.Language.System | Same as Windows | Windows 언어 사용 |
+| Settings.Language.English | English | English |
+| Settings.Language.Korean | 한국어 | 한국어 |
 | Settings.Folder | Hearthstone folder | 하스스톤 폴더 |
 | Settings.Folder.Change | Change | 변경 |
 

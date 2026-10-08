@@ -51,5 +51,9 @@ Sizes are in device-independent pixels and scale with the Windows text size sett
 
 ## Checks
 
+- The Settings window has no button row: changes apply at once, as in Windows Settings, and the window closes with Escape or its close button. This follows wireframe 3.
+- Wireframe toggles are built as check boxes: the WPF Fluent theme in .NET 10 has no toggle switch control, and a check box is the standard Windows control for an on/off option in a dialog.
+- `KB_SCREENSHOTS=<folder> dotnet test --project tests/KindlyBartender.App.Tests -- --filter-class KindlyBartender.App.Tests.Views.WindowScreenshots` renders each window in English and Korean, light and dark, into the folder; the images in `design/screenshots` come from it. The system backdrop is replaced by the theme's base fill in the images.
+- The 200% text size and contrast theme checks are done by hand during acceptance testing, because they need the Windows setting changed.
 - Screenshots of each window in every state, in English and Korean, in light and dark mode, at 100% and 200% text size, are attached to the pull request that builds the window.
 - A separate review compares each window with the wireframes and this file before the owner's review.
