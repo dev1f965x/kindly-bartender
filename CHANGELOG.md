@@ -18,3 +18,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Tray icon and menu, one copy per user, settings file, start with Windows, Korean and English UI text generated from CONTENT.md, and the notification rules.
 - Log settings, Settings, and About windows in the Windows 11 style, with light and dark themes and Korean and English text.
 - Diagnostic log with daily files and no free text, and an update check against GitHub Releases.
+- End-to-end test that plays a synthetic game into a temporary Hearthstone folder and checks the notifications.
