@@ -1,10 +1,11 @@
 using System.ComponentModel;
+using KindlyBartender.Core.Diagnostics;
 using KindlyBartender.Core.Notifications;
 
 namespace KindlyBartender.App.Windows;
 
 /// <summary>Carries out notifications on Windows. Failures go to <paramref name="onError"/> for the diagnostic log.</summary>
-internal sealed class WindowsNotificationActions(ToastService toasts, Action<string, Exception> onError) : INotificationActions
+internal sealed class WindowsNotificationActions(ToastService toasts, Action<LogEvent, Exception> onError) : INotificationActions
 {
     // Windows' own notification sound, so it follows the player's sound scheme.
     private const string NotificationSound = "Notification.Default";
@@ -18,7 +19,7 @@ internal sealed class WindowsNotificationActions(ToastService toasts, Action<str
     {
         if (!NativeMethods.PlaySound(NotificationSound, IntPtr.Zero, NativeMethods.SndAlias | NativeMethods.SndAsync | NativeMethods.SndNoDefault | NativeMethods.SndSystem))
         {
-            onError("Play the notification sound", new Win32Exception());
+            onError(LogEvent.PlaySoundFailed, new Win32Exception());
         }
     }
 
@@ -35,7 +36,7 @@ internal sealed class WindowsNotificationActions(ToastService toasts, Action<str
     {
         if (HearthstoneWindow.Find() is var window && window != IntPtr.Zero && HearthstoneWindow.ShowInFront(window) is var error and not 0)
         {
-            onError("Show Hearthstone in front", new Win32Exception(error));
+            onError(LogEvent.ShowInFrontFailed, new Win32Exception(error));
         }
     }
 
@@ -43,7 +44,7 @@ internal sealed class WindowsNotificationActions(ToastService toasts, Action<str
     {
         if (HearthstoneWindow.Find() is var window && window != IntPtr.Zero && !HearthstoneWindow.Activate(window))
         {
-            onError("Bring Hearthstone forward", new Win32Exception());
+            onError(LogEvent.BringForwardFailed, new Win32Exception());
         }
     }
 }

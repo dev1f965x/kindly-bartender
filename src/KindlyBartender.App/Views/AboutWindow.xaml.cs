@@ -32,10 +32,15 @@ internal sealed partial class AboutWindow : Window
         var notices = Path.Combine(AppContext.BaseDirectory, ThirdPartyNoticesFile);
         if (File.Exists(notices))
         {
-            AddLink(Strings.Get("About.ThirdParty"), () => Links.Open(notices));
+            AddLink(Strings.Get("About.ThirdParty"), () => Links.OpenLocal(notices));
         }
 
         AddLink(Strings.Get("About.Feedback"), () => Links.Open(Links.Issues));
+
+        var openLog = new Button { Content = Strings.Get("About.DiagnosticLog"), HorizontalAlignment = HorizontalAlignment.Left };
+        openLog.Click += (_, _) => Links.OpenLocal(DiagnosticLog.Folder);
+        DiagnosticsPanel.Children.Add(openLog);
+        DiagnosticsPanel.Children.Add(new TextBlock { Text = Strings.Get("About.DiagnosticLog.Note"), Style = (Style)FindResource("CaptionText") });
     }
 
     /// <summary>The version from the build, without the commit hash the SDK appends.</summary>
@@ -56,9 +61,6 @@ internal sealed partial class AboutWindow : Window
         UpdateMessage.Show(Strings.Format("About.Update", version), warning: false);
         UpdateMessage.Extras.Add(Links.Create(Strings.Get("About.Update.Link"), openDownloadPage));
     }
-
-    /// <summary>Area under the links for diagnostic tools.</summary>
-    internal StackPanel Diagnostics => DiagnosticsPanel;
 
     private void AddLink(string text, Action onClick)
     {

@@ -8,6 +8,13 @@ Kindly Bartender is in development and has no release yet.
 
 Kindly Bartender is an unofficial fan project. It is not affiliated with or endorsed by Blizzard Entertainment. Hearthstone is a trademark of Blizzard Entertainment, Inc.
 
+## Privacy
+
+Kindly Bartender collects no personal data and has no telemetry.
+
+- At each start it asks GitHub (`api.github.com`) whether a newer release exists. GitHub sees your IP address and the app version, as with any web request. Nothing is downloaded or installed.
+- It keeps a diagnostic log in `%LOCALAPPDATA%KindlyBartenderdataogs`: one file per day, at most seven. Entries are fixed event names, numbers, and error types, never paths, account names, or game text. You can attach it to a problem report; it is never sent anywhere by the app.
+
 ## Development
 
 Requirements: Windows 11 and the .NET SDK version in [global.json](global.json).

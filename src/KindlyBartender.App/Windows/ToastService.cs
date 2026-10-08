@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using KindlyBartender.Core.Diagnostics;
 using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
 
@@ -23,7 +24,7 @@ internal enum ToastKind
 /// kind is kept until it is replaced, fails, or the player dismisses it; at most one per kind is held. A banner
 /// that times out moves to the notification center and stays selectable there until it expires.
 /// </remarks>
-internal sealed class ToastService(Action<string, Exception> onError)
+internal sealed class ToastService(Action<LogEvent, Exception> onError)
 {
     private const string Group = "kindly-bartender";
 
@@ -51,7 +52,7 @@ internal sealed class ToastService(Action<string, Exception> onError)
             toast.Dismissed += (sender, args) => OnDismissed(kind, sender, args);
             toast.Failed += (sender, args) =>
             {
-                onError("Show a notification", args.ErrorCode);
+                onError(LogEvent.ShowNotificationFailed, args.ErrorCode);
                 Release(kind, sender);
             };
 
@@ -65,7 +66,7 @@ internal sealed class ToastService(Action<string, Exception> onError)
         }
         catch (Exception e) when (e is COMException or ArgumentException or InvalidOperationException)
         {
-            onError("Show a notification", e);
+            onError(LogEvent.ShowNotificationFailed, e);
         }
     }
 
@@ -77,7 +78,7 @@ internal sealed class ToastService(Action<string, Exception> onError)
         }
         catch (Exception e) when (e is COMException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
-            onError("Handle a notification selection", e);
+            onError(LogEvent.NotificationSelectionFailed, e);
         }
     }
 

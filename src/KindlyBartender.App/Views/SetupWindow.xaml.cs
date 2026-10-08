@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Automation;
 using KindlyBartender.App.Configuration;
 using KindlyBartender.App.Hearthstone;
+using KindlyBartender.Core.Diagnostics;
 using Microsoft.Win32;
 
 namespace KindlyBartender.App.Views;
@@ -103,7 +104,7 @@ internal sealed partial class SetupWindow : Window
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
-            DiagnosticLog.Error("Set up the log settings", error);
+            DiagnosticLog.Error(LogEvent.SetupFailed, error);
             result = SetupResult.Failed;
         }
 

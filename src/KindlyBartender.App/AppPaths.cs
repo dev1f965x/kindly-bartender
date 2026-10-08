@@ -15,5 +15,7 @@ internal static class AppPaths
 
     public static string BackupFolder { get; } = Path.Combine(DataFolder, "backups");
 
+    public static string LogsFolder { get; } = Path.Combine(DataFolder, "logs");
+
     public static string LogConfig { get; } = Core.Configuration.HearthstoneConfig.LogConfigPath(LocalAppData);
 }

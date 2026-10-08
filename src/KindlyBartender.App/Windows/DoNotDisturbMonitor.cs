@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using KindlyBartender.Core.Diagnostics;
 using KindlyBartender.Core.Notifications;
 using Windows.UI.Notifications;
 
@@ -8,10 +9,10 @@ namespace KindlyBartender.App.Windows;
 internal sealed class DoNotDisturbMonitor : IDoNotDisturb, IDisposable
 {
     private readonly ToastNotificationManagerForUser? _manager;
-    private readonly Action<string, Exception> _onError;
+    private readonly Action<LogEvent, Exception> _onError;
 
     /// <param name="onError">Receives errors; when the mode cannot be read, notifications are assumed not hidden.</param>
-    public DoNotDisturbMonitor(Action<string, Exception> onError)
+    public DoNotDisturbMonitor(Action<LogEvent, Exception> onError)
     {
         _onError = onError;
         try
@@ -21,7 +22,7 @@ internal sealed class DoNotDisturbMonitor : IDoNotDisturb, IDisposable
         }
         catch (COMException e)
         {
-            onError("Read the notification mode", e);
+            onError(LogEvent.ReadNotificationModeFailed, e);
         }
     }
 
@@ -37,7 +38,7 @@ internal sealed class DoNotDisturbMonitor : IDoNotDisturb, IDisposable
             }
             catch (COMException e)
             {
-                _onError("Read the notification mode", e);
+                _onError(LogEvent.ReadNotificationModeFailed, e);
                 return false;
             }
         }

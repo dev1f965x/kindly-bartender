@@ -5,6 +5,7 @@ using KindlyBartender.App.Hearthstone;
 using KindlyBartender.App.Tray;
 using KindlyBartender.App.Windows;
 using KindlyBartender.Core.Detection;
+using KindlyBartender.Core.Diagnostics;
 using KindlyBartender.Core.Hearthstone;
 using KindlyBartender.Core.Notifications;
 using KindlyBartender.Core.Settings;
@@ -59,7 +60,7 @@ internal sealed class AppShell : IDisposable
         Settings = settings;
         if (result is SettingsLoadResult.Broken or SettingsLoadResult.Unreadable or SettingsLoadResult.TooNew)
         {
-            DiagnosticLog.Info($"Settings not loaded ({result}); defaults are used.");
+            DiagnosticLog.Write(LogEvent.SettingsNotLoaded, result);
         }
 
         Strings.UseLanguage(Settings.Language);
@@ -67,9 +68,17 @@ internal sealed class AppShell : IDisposable
         var clock = new SleepAwareClock();
         _tracker = new GameTracker(clock);
         _monitor = new LogMonitor(new HearthstoneProcessProbe(), () => InstallFolder, _tracker, clock);
-        _monitor.HearthstoneStarted += _ => OnHearthstoneStartedOrExited();
-        _monitor.HearthstoneExited += OnHearthstoneStartedOrExited;
-        _monitor.LinesSkipped += count => DiagnosticLog.Info($"Skipped {count} over-long log lines.");
+        _monitor.HearthstoneStarted += _ =>
+        {
+            DiagnosticLog.Write(LogEvent.HearthstoneStarted);
+            OnHearthstoneStartedOrExited();
+        };
+        _monitor.HearthstoneExited += () =>
+        {
+            DiagnosticLog.Write(LogEvent.HearthstoneExited);
+            OnHearthstoneStartedOrExited();
+        };
+        _monitor.LinesSkipped += count => DiagnosticLog.Write(LogEvent.LinesSkipped, count);
         _monitor.Error += DiagnosticLog.Error;
 
         _policy = new NotificationPolicy(new WindowsNotificationActions(_toasts, DiagnosticLog.Error), PhaseText);
@@ -189,6 +198,7 @@ internal sealed class AppShell : IDisposable
         });
 
         var result = await Task.Run(() => HearthstoneSetup.Apply(installFolder)).ConfigureAwait(true);
+        DiagnosticLog.Write(LogEvent.SetupFinished, result);
         CheckSetup(notify: false);
         return result;
     }
@@ -244,11 +254,11 @@ internal sealed class AppShell : IDisposable
             // A defect in detection must not end the app. It is logged when it changes, not every 250 ms, and
             // repeated failures show as Not working (PRD FR15).
             _pollFailures++;
-            var error = $"{e.GetType().FullName}: {e.Message}";
+            var error = $"{e.GetType().FullName}:{e.HResult}";
             if (error != _lastPollError)
             {
                 _lastPollError = error;
-                DiagnosticLog.Error("Read the game log", e);
+                DiagnosticLog.Error(LogEvent.PollFailed, e);
             }
 
             outputs = [];
@@ -269,10 +279,11 @@ internal sealed class AppShell : IDisposable
             switch (output)
             {
                 case PhaseStarted started:
+                    DiagnosticLog.Write(LogEvent.PhaseStarted, started.Phase);
                     _policy.OnPhaseStarted(started.Phase, Settings, _paused);
                     break;
                 case DetectionFailing failing:
-                    DiagnosticLog.Info($"Detection failing: {failing.Reason}.");
+                    DiagnosticLog.Write(LogEvent.DetectionFailing, failing.Reason);
                     ShowNotice("Toast.NotWorking.Title", FailureTextId(failing.Reason), onSelected: null);
                     break;
             }
@@ -280,7 +291,7 @@ internal sealed class AppShell : IDisposable
         catch (Exception e)
         {
             // One failed notification must not drop the outputs after it.
-            DiagnosticLog.Error("Notify the player", e);
+            DiagnosticLog.Error(LogEvent.NotifyFailed, e);
         }
     }
 
@@ -340,7 +351,7 @@ internal sealed class AppShell : IDisposable
         }
         catch (Exception e) when (e is UnauthorizedAccessException or IOException or System.Security.SecurityException)
         {
-            DiagnosticLog.Error("Update the start-with-Windows entry", e);
+            DiagnosticLog.Error(LogEvent.StartupEntryFailed, e);
         }
     }
 
@@ -350,12 +361,12 @@ internal sealed class AppShell : IDisposable
         {
             if (!_store.Save(Settings))
             {
-                DiagnosticLog.Info("Settings not saved: the settings file was not read by this version.");
+                DiagnosticLog.Write(LogEvent.SettingsNotSaved);
             }
         }
         catch (Exception e) when (e is UnauthorizedAccessException or IOException)
         {
-            DiagnosticLog.Error("Save settings", e);
+            DiagnosticLog.Error(LogEvent.SettingsSaveFailed, e);
         }
     }
 
