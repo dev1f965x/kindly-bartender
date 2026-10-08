@@ -29,6 +29,7 @@ try {
     }
     Invoke-Step 'Game logs' { & (Join-Path $PSScriptRoot 'Test-NoGameLogs.ps1') }
     Invoke-Step 'UI strings' { & (Join-Path $PSScriptRoot 'Test-Content.ps1') }
+    Invoke-Step 'String resources' { & (Join-Path $PSScriptRoot 'Sync-Strings.ps1') -Check }
 }
 finally {
     Pop-Location

@@ -8,8 +8,11 @@ namespace KindlyBartender.App.Configuration;
 
 public enum SetupResult
 {
-    /// <summary>Both files meet the requirements.</summary>
+    /// <summary>Both files meet the requirements now, and at least one was changed.</summary>
     Done,
+
+    /// <summary>Both files already met the requirements; nothing was written, so Hearthstone needs no restart.</summary>
+    AlreadySet,
 
     /// <summary>The player cancelled the Windows administrator prompt.</summary>
     ElevationCancelled,
@@ -50,7 +53,8 @@ internal static class HearthstoneSetup
         var clientConfig = ConfigFileWriter.Ensure(clientConfigPath, HearthstoneConfig.ClientConfig, AppPaths.BackupFolder);
         return clientConfig switch
         {
-            ConfigWriteOutcome.Written or ConfigWriteOutcome.Unchanged => SetupResult.Done,
+            ConfigWriteOutcome.Written => SetupResult.Done,
+            ConfigWriteOutcome.Unchanged => logConfig == ConfigWriteOutcome.Written ? SetupResult.Done : SetupResult.AlreadySet,
             ConfigWriteOutcome.AccessDenied => WriteClientConfigElevated(installFolder),
             ConfigWriteOutcome.Refused => SetupResult.FileNotEditable,
             _ => SetupResult.Failed,

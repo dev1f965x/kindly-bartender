@@ -20,9 +20,10 @@ public interface IHearthstoneProcessProbe
 /// every 2 seconds and reads new lines on every call.
 /// </summary>
 /// <remarks>
-/// File system errors are reported through <see cref="Error"/> and retried on a later poll; they never escape
-/// <see cref="Poll"/>. A time zone change while Hearthstone runs can move its folder name outside the start
-/// tolerance; detection then fails visibly through the tracker's deadline.
+/// File system errors are reported through <see cref="Error"/> and retried on a later poll. Any other exception
+/// is a defect and escapes <see cref="Poll"/>, so the caller must catch and log it.
+/// A time zone change while Hearthstone runs can move its folder name outside the start tolerance;
+/// detection then fails visibly through the tracker's deadline.
 /// </remarks>
 public sealed class LogMonitor(
     IHearthstoneProcessProbe processProbe,
