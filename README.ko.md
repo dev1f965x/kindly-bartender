@@ -1,11 +1,15 @@
 <a id="readme-top"></a>
 
 [![CI][ci-shield]][ci-url]
+[![Release][release-shield]][release-url]
 [![Issues][issues-shield]][issues-url]
 [![License][license-shield]][license-url]
 
 <br />
 <div align="center">
+  <a href="https://github.com/dev1f965x/kindly-bartender/releases">
+    <img src="design/icon/app-icon.png" alt="Kindly Bartender 로고" width="80" height="80">
+  </a>
 
 <h3 align="center">Kindly Bartender</h3>
 
@@ -61,6 +65,8 @@
 아직 개발 중이며 출시된 버전은 없습니다.
 
 Kindly Bartender는 비공식 팬 프로젝트이며 블리자드 엔터테인먼트와 제휴하거나 보증을 받지 않았습니다. Hearthstone은 Blizzard Entertainment, Inc.의 상표입니다.
+
+변경 사항은 [변경 이력](CHANGELOG.md)에 있습니다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -128,7 +134,7 @@ Kindly Bartender는 개인정보를 수집하지 않으며 사용 통계도 보�
 
 필요한 것: Windows 11과 [global.json](global.json)에 적힌 버전의 .NET SDK
 
-명령 목록은 [README.md](README.md#development)를 참고하세요.
+명령 목록은 [README.md](README.md#development)의 표를 따릅니다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -159,6 +165,8 @@ Kindly Bartender는 개인정보를 수집하지 않으며 사용 통계도 보�
 
 [ci-shield]: https://img.shields.io/github/actions/workflow/status/dev1f965x/kindly-bartender/ci.yml?branch=main&style=for-the-badge&label=CI
 [ci-url]: https://github.com/dev1f965x/kindly-bartender/actions/workflows/ci.yml
+[release-shield]: https://img.shields.io/github/v/release/dev1f965x/kindly-bartender?style=for-the-badge
+[release-url]: https://github.com/dev1f965x/kindly-bartender/releases
 [issues-shield]: https://img.shields.io/github/issues/dev1f965x/kindly-bartender?style=for-the-badge
 [issues-url]: https://github.com/dev1f965x/kindly-bartender/issues
 [license-shield]: https://img.shields.io/github/license/dev1f965x/kindly-bartender?style=for-the-badge

@@ -1,11 +1,15 @@
 <a id="readme-top"></a>
 
 [![CI][ci-shield]][ci-url]
+[![Release][release-shield]][release-url]
 [![Issues][issues-shield]][issues-url]
 [![License][license-shield]][license-url]
 
 <br />
 <div align="center">
+  <a href="https://github.com/dev1f965x/kindly-bartender/releases">
+    <img src="design/icon/app-icon.png" alt="Kindly Bartender logo" width="80" height="80">
+  </a>
 
 <h3 align="center">Kindly Bartender</h3>
 
@@ -61,6 +65,8 @@ A Windows tray app for Hearthstone Battlegrounds. When a Recruit phase starts wh
 Kindly Bartender is in development and has no release yet.
 
 Kindly Bartender is an unofficial fan project. It is not affiliated with or endorsed by Blizzard Entertainment. Hearthstone is a trademark of Blizzard Entertainment, Inc.
+
+Changes are listed in the [changelog](CHANGELOG.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -166,6 +172,8 @@ Project link: <https://github.com/dev1f965x/kindly-bartender>
 
 [ci-shield]: https://img.shields.io/github/actions/workflow/status/dev1f965x/kindly-bartender/ci.yml?branch=main&style=for-the-badge&label=CI
 [ci-url]: https://github.com/dev1f965x/kindly-bartender/actions/workflows/ci.yml
+[release-shield]: https://img.shields.io/github/v/release/dev1f965x/kindly-bartender?style=for-the-badge
+[release-url]: https://github.com/dev1f965x/kindly-bartender/releases
 [issues-shield]: https://img.shields.io/github/issues/dev1f965x/kindly-bartender?style=for-the-badge
 [issues-url]: https://github.com/dev1f965x/kindly-bartender/issues
 [license-shield]: https://img.shields.io/github/license/dev1f965x/kindly-bartender?style=for-the-badge
